@@ -1,0 +1,1655 @@
+/* ==========================================================================
+   Banque de questions d'automatismes — 4ème (cycle 4)
+   Aligné sur les attendus de fin d'année 4ème (Eduscol).
+   ========================================================================== */
+
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function makeQCM(choicesWithCorrect) {
+  const shuffled = shuffle(choicesWithCorrect);
+  const correctIdx = shuffled.findIndex(c => c.correct);
+  return { choices: shuffled.map(c => c.html), correctIdx };
+}
+function normalizeAnswer(s) {
+  return String(s).trim().toLowerCase().replace(/\s+/g, '').replace(/,/g, '.').replace(/°/g, '');
+}
+
+/* ------------------------------------------------------------------
+   THÈME 1 — CALCUL NUMÉRIQUE (fractions, relatifs, puissances, racines)
+   ------------------------------------------------------------------ */
+
+// Opérations sur les relatifs (produit, quotient)
+function t1_relatifs_produit() {
+  const cases = [
+    { expr: '-7 \\times 3', r: '-21' }, { expr: '-2{,}5 \\times (-4)', r: '10' },
+    { expr: '2{,}4 \\times (-0{,}5)', r: '-1,2' }, { expr: '(-8) \\times (-3)', r: '24' },
+    { expr: '-6 \\times 5', r: '-30' }, { expr: '(-0{,}1) \\times (-0{,}4)', r: '0,04' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Produit de relatifs',
+    body: `Calculer : \\(${k.expr}\\).`,
+    type: 'input', expected: [k.r, k.r.replace(',', '.')],
+    solution: `\\(${k.expr} = ${k.r}\\). Règle des signes : − × + = − ; − × − = +.`,
+    help: {
+      cours: "<b>Règle des signes</b> : même signe → produit positif ; signes différents → produit négatif.",
+      savoirFaire: "Calculer d'abord avec les valeurs absolues, puis appliquer la règle des signes.",
+      erreurs: ["Se tromper de signe.", "Oublier la virgule.", "Additionner au lieu de multiplier."]
+    }
+  };
+}
+
+function t1_relatifs_quotient() {
+  const cases = [
+    { expr: '-12{,}8 \\div 2', r: '-6,4' }, { expr: '-63 \\div (-0{,}7)', r: '90' },
+    { expr: '7{,}2 \\div (-5)', r: '-1,44' }, { expr: '-24 \\div 3', r: '-8' },
+    { expr: '-15 \\div (-5)', r: '3' }, { expr: '18 \\div (-6)', r: '-3' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Quotient de relatifs',
+    body: `Calculer : \\(${k.expr}\\).`,
+    type: 'input', expected: [k.r, k.r.replace(',', '.')],
+    solution: `\\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "Même règle des signes pour la division : mêmes signes → positif ; signes différents → négatif.",
+      savoirFaire: "Faire d'abord la division des valeurs absolues, puis appliquer le signe.",
+      erreurs: ["Se tromper de signe.", "Inverser dividende et diviseur.", "Oublier la virgule."]
+    }
+  };
+}
+
+function t1_signe_produit() {
+  const cases = [
+    { expr: '(-6{,}7) \\times 7 \\times (-1{,}24) \\times (-0{,}7)', signe: '-', nbNeg: 3 },
+    { expr: '(-2) \\times (-3) \\times (-4)', signe: '-', nbNeg: 3 },
+    { expr: '(-5) \\times 2 \\times (-1{,}5)', signe: '+', nbNeg: 2 },
+    { expr: '(-1) \\times (-2) \\times (-3) \\times (-4)', signe: '+', nbNeg: 4 },
+    { expr: '7 \\times (-0{,}5)', signe: '-', nbNeg: 1 }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: 'Positif (+)', correct: k.signe === '+' },
+    { html: 'Négatif (−)', correct: k.signe === '-' }
+  ]);
+  return {
+    theme: 'calcul', title: 'Signe d\'un produit',
+    body: `Quel est le signe de \\(${k.expr}\\) ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Il y a <b>${k.nbNeg}</b> facteur(s) négatif(s). Un nombre pair → produit positif ; impair → négatif. Ici : <b>${k.signe === '+' ? 'positif' : 'négatif'}</b>.`,
+    help: {
+      cours: "Signe d'un produit de plusieurs facteurs : compter le nombre de facteurs <b>négatifs</b>. Si pair → +, si impair → −.",
+      savoirFaire: "On peut déterminer le signe AVANT de calculer.",
+      erreurs: ["Oublier de compter les 0.", "Se tromper de parité.", "Mélanger règle des signes et calcul numérique."]
+    }
+  };
+}
+
+// Somme de fractions
+function t1_somme_fractions() {
+  const cases = [
+    { a:'1/2', b:'1/4', r:'3/4' }, { a:'1/3', b:'1/6', r:'1/2' },
+    { a:'1/2', b:'1/3', r:'5/6' }, { a:'2/5', b:'1/5', r:'3/5' },
+    { a:'5/2', b:'7/3', r:'29/6' }, { a:'7/5', b:'8/5', r:'3' }
+  ];
+  const k = pick(cases);
+  const toLatex = f => f === '3' ? '3' : (() => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; })();
+  const pool = ['3/4','5/6','1/2','29/6','3/5','2','3','5/8','7/12'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLatex(k.r)}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${toLatex(d)}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Somme de fractions',
+    body: `\\(${toLatex(k.a)} + ${toLatex(k.b)}\\) est égal à :`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On met au même dénominateur puis on additionne les numérateurs.`,
+    help: {
+      cours: "Pour additionner : même dénominateur d'abord, puis on additionne les numérateurs.",
+      savoirFaire: "Chercher le plus petit dénominateur commun.",
+      erreurs: ["Additionner numérateurs ET dénominateurs.", "Oublier de simplifier.", "Se tromper de dénominateur commun."]
+    }
+  };
+}
+
+// Produit de fractions
+function t1_produit_fractions() {
+  const cases = [
+    { expr: '\\dfrac{3}{5} \\times \\dfrac{14}{7}', r: '6/5' },
+    { expr: '\\dfrac{2}{3} \\times \\dfrac{9}{4}', r: '3/2' },
+    { expr: '\\dfrac{5}{6} \\times \\dfrac{3}{10}', r: '1/4' },
+    { expr: '\\dfrac{4}{7} \\times \\dfrac{21}{8}', r: '3/2' }
+  ];
+  const k = pick(cases);
+  const toLx = f => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; };
+  const pool = ['6/5','3/2','1/4','5/8','2/3','7/5'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLx(k.r)}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${toLx(d)}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Produit de fractions',
+    body: `\\(${k.expr}\\) est égal à :`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Numérateur × numérateur / dénominateur × dénominateur, puis on simplifie.`,
+    help: {
+      cours: "\\(\\dfrac{a}{b} \\times \\dfrac{c}{d} = \\dfrac{a \\times c}{b \\times d}\\).",
+      savoirFaire: "Simplifier AVANT de multiplier pour éviter les grands nombres.",
+      erreurs: ["Additionner au lieu de multiplier.", "Oublier de simplifier.", "Erreur de calcul."]
+    }
+  };
+}
+
+// Quotient de fractions (utilise inverse)
+function t1_quotient_fractions() {
+  const cases = [
+    { expr: '\\dfrac{5}{9} \\div \\dfrac{1}{2}', r: '10/9' },
+    { expr: '\\dfrac{2}{3} \\div \\dfrac{4}{9}', r: '3/2' },
+    { expr: '\\dfrac{7}{4} \\div \\dfrac{1}{4}', r: '7' },
+    { expr: '\\dfrac{3}{5} \\div \\dfrac{6}{10}', r: '1' }
+  ];
+  const k = pick(cases);
+  const toLx = f => f.includes('/') ? (() => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; })() : f;
+  const pool = ['10/9','3/2','7','1','5/18','2/3','5/4'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLx(k.r)}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${toLx(d)}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Quotient de fractions (inverse)',
+    body: `\\(${k.expr}\\) est égal à :`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Diviser par une fraction = multiplier par son <b>inverse</b>.`,
+    help: {
+      cours: "<b>\\(\\dfrac{a}{b} \\div \\dfrac{c}{d} = \\dfrac{a}{b} \\times \\dfrac{d}{c}\\)</b>.",
+      savoirFaire: "Transformer la division en multiplication par l'inverse, puis simplifier.",
+      erreurs: ["Diviser numérateurs et dénominateurs directement.", "Oublier d'inverser.", "Se tromper d'inverse."]
+    }
+  };
+}
+
+// Inverse d'un nombre (H5)
+function t1_inverse() {
+  const cases = [
+    { n: '3', r: '\\dfrac{1}{3}' }, { n: '\\dfrac{2}{5}', r: '\\dfrac{5}{2}' },
+    { n: '\\dfrac{7}{4}', r: '\\dfrac{4}{7}' }, { n: '0{,}5', r: '2' },
+    { n: '-2', r: '-\\dfrac{1}{2}' }, { n: '\\dfrac{1}{6}', r: '6' }
+  ];
+  const k = pick(cases);
+  const pool = ['\\dfrac{1}{3}','\\dfrac{5}{2}','\\dfrac{4}{7}','2','-\\dfrac{1}{2}','6','\\dfrac{1}{2}'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Inverse d\'un nombre',
+    body: `Quel est l'inverse de \\(${k.n}\\) ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `L'inverse de \\(a\\) est \\(\\dfrac{1}{a}\\). Pour une fraction : on échange numérateur et dénominateur.`,
+    help: {
+      cours: "L'<b>inverse</b> de \\(a\\) est \\(\\dfrac{1}{a}\\) (pour \\(a \\neq 0\\)). \\(a \\times \\dfrac{1}{a} = 1\\).",
+      savoirFaire: "Pour une fraction : échanger numérateur et dénominateur. Pour un décimal : diviser 1 par ce nombre.",
+      erreurs: ["Confondre inverse et opposé (−a).", "0 n'a pas d'inverse.", "Oublier le signe."]
+    }
+  };
+}
+
+// Puissance d'un nombre (exposants positifs et négatifs — 4ème avec puissances de 10)
+function t1_puissance_10() {
+  const cases = [
+    { expr: '10^4', r: '10000' }, { expr: '10^3', r: '1000' },
+    { expr: '10^{-3}', r: '0,001' }, { expr: '10^{-2}', r: '0,01' },
+    { expr: '10^5', r: '100000' }, { expr: '10^{-1}', r: '0,1' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Puissance de 10',
+    body: `\\(${k.expr}\\) est égal à :`,
+    type: 'input', expected: [k.r, k.r.replace(',', '.')],
+    solution: `\\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "\\(10^n\\) = 1 suivi de n zéros. \\(10^{-n} = \\dfrac{1}{10^n}\\) (déplacement de la virgule vers la gauche).",
+      savoirFaire: "Compter les zéros (exposant positif) ou décaler la virgule (exposant négatif).",
+      erreurs: ["Confondre \\(10^4\\) et 40.", "Oublier un zéro.", "Confondre \\(10^{-3}\\) et 0,003."]
+    }
+  };
+}
+
+// Notation scientifique (4ème)
+function t1_notation_sci() {
+  const cases = [
+    { n: '3\\,900\\,000\\,000', sci: '3{,}9 \\times 10^9' },
+    { n: '32\\,000', sci: '3{,}2 \\times 10^4' },
+    { n: '0{,}00045', sci: '4{,}5 \\times 10^{-4}' },
+    { n: '560', sci: '5{,}6 \\times 10^2' },
+    { n: '0{,}0000783', sci: '7{,}83 \\times 10^{-5}' }
+  ];
+  const k = pick(cases);
+  const distract = shuffle(cases.filter(c => c.sci !== k.sci)).slice(0, 3).map(c => c.sci);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.sci}\\)`, correct: true },
+    ...distract.map(s => ({ html: `\\(${s}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Notation scientifique',
+    body: `La notation scientifique de \\(${k.n}\\) est :`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(${k.n} = ${k.sci}\\).`,
+    help: {
+      cours: "Notation scientifique : \\(a \\times 10^n\\) avec \\(1 \\leq a < 10\\) et \\(n\\) entier relatif.",
+      savoirFaire: "Décaler la virgule pour obtenir \\(a\\) entre 1 et 10, et compter les décalages.",
+      erreurs: ["\\(a\\) doit être < 10 (ex. \\(32 \\times 10^3\\) n'est pas scientifique).", "Oublier le signe de \\(n\\).", "Se tromper du nombre de décalages."]
+    }
+  };
+}
+
+// Préfixes nano → giga (4ème)
+function t1_prefixes() {
+  const cases = [
+    { q: "3 microlitres en litres", r: "3 \\times 10^{-6} \\text{ L}" },
+    { q: "7 mégamètres en mètres", r: "7 \\times 10^6 \\text{ m}" },
+    { q: "5 nanosecondes en secondes", r: "5 \\times 10^{-9} \\text{ s}" },
+    { q: "2 gigaoctets en octets", r: "2 \\times 10^9 \\text{ o}" },
+    { q: "4 millisecondes en secondes", r: "4 \\times 10^{-3} \\text{ s}" },
+    { q: "8 kilomètres en mètres", r: "8 \\times 10^3 \\text{ m}" }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Préfixes (nano, micro, méga, giga...)',
+    body: `Convertir : ${k.q}.`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Chaque préfixe correspond à une puissance de 10.`,
+    help: {
+      cours: "Préfixes usuels :<br>• <b>nano</b> = \\(10^{-9}\\)<br>• <b>micro</b> = \\(10^{-6}\\)<br>• <b>milli</b> = \\(10^{-3}\\)<br>• <b>kilo</b> = \\(10^{3}\\)<br>• <b>méga</b> = \\(10^{6}\\)<br>• <b>giga</b> = \\(10^{9}\\)",
+      savoirFaire: "Multiplier par la puissance de 10 correspondant au préfixe.",
+      erreurs: ["Confondre méga et giga.", "Se tromper de signe pour micro / nano.", "Oublier l'unité."]
+    }
+  };
+}
+
+// Carré parfait (4ème p.2)
+function t1_carre_parfait() {
+  const cases = [
+    { n: 11, r: 121 }, { n: 12, r: 144 }, { n: 9, r: 81 },
+    { n: 7, r: 49 }, { n: 8, r: 64 }, { n: 10, r: 100 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Carré parfait',
+    body: `Calculer \\(${k.n}^2\\).`,
+    type: 'input', expected: String(k.r),
+    solution: `\\(${k.n}^2 = ${k.n} \\times ${k.n} = ${k.r}\\).`,
+    help: {
+      cours: "<b>Carrés à connaître par cœur</b> de 1 à 12 : 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144.",
+      savoirFaire: "\\(n^2\\) = \\(n\\) multiplié par lui-même. À savoir par cœur jusqu'à 12.",
+      erreurs: ["Confondre \\(n^2\\) et \\(2n\\).", "Se tromper dans la table.", "Écrire juste \\(n\\)."]
+    }
+  };
+}
+
+// Racine carrée d'un carré parfait
+function t1_racine_parfaite() {
+  const cases = [
+    { a: 81, r: 9 }, { a: 64, r: 8 }, { a: 100, r: 10 },
+    { a: 49, r: 7 }, { a: 144, r: 12 }, { a: 121, r: 11 }, { a: 36, r: 6 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Racine carrée (carré parfait)',
+    body: `Calculer \\(\\sqrt{${k.a}}\\).`,
+    type: 'input', expected: String(k.r),
+    solution: `\\(\\sqrt{${k.a}} = ${k.r}\\) car \\(${k.r}^2 = ${k.a}\\).`,
+    help: {
+      cours: "\\(\\sqrt{a}\\) est le nombre positif qui, élevé au carré, donne \\(a\\).",
+      savoirFaire: "Connaître les carrés parfaits par cœur pour reconnaître la racine.",
+      erreurs: ["Diviser par 2 au lieu de prendre la racine.", "Confondre avec \\(a^2\\).", "Oublier que \\(\\sqrt{a}\\) est positif."]
+    }
+  };
+}
+
+// Encadrement de racine (4ème p.2 : "encadre √7 entre deux entiers")
+function t1_encadrement_racine() {
+  const cases = [
+    { n: 7, lo: 2, hi: 3 }, { n: 20, lo: 4, hi: 5 },
+    { n: 40, lo: 6, hi: 7 }, { n: 50, lo: 7, hi: 8 },
+    { n: 10, lo: 3, hi: 4 }, { n: 30, lo: 5, hi: 6 }
+  ];
+  const k = pick(cases);
+  const correct = `${k.lo} < \\sqrt{${k.n}} < ${k.hi}`;
+  const distractors = [
+    `${k.lo-1} < \\sqrt{${k.n}} < ${k.lo}`,
+    `${k.hi} < \\sqrt{${k.n}} < ${k.hi+1}`,
+    `${k.n-1} < \\sqrt{${k.n}} < ${k.n+1}`
+  ];
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${correct}\\)`, correct: true },
+    ...distractors.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Encadrement d\'une racine',
+    body: `Encadrer \\(\\sqrt{${k.n}}\\) par deux entiers consécutifs.`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(${k.lo}^2 = ${k.lo*k.lo}\\) et \\(${k.hi}^2 = ${k.hi*k.hi}\\). Comme \\(${k.lo*k.lo} < ${k.n} < ${k.hi*k.hi}\\), on a \\(${k.lo} < \\sqrt{${k.n}} < ${k.hi}\\).`,
+    help: {
+      cours: "Pour encadrer \\(\\sqrt{n}\\), on cherche les deux carrés parfaits qui entourent \\(n\\).",
+      savoirFaire: "Exemple : \\(\\sqrt{20}\\) → 16 < 20 < 25 → 4 < \\(\\sqrt{20}\\) < 5.",
+      erreurs: ["Diviser n par 2.", "Confondre avec l'encadrement de n.", "Oublier l'ordre."]
+    }
+  };
+}
+
+// Comparaison de fractions
+function t1_comp_fractions() {
+  const cases = [
+    { a: '5/18', b: '7/12', signe: '<' }, // 5/18 ≈ 0.28, 7/12 ≈ 0.58
+    { a: '5/12', b: '4/3', signe: '<' },
+    { a: '3/4', b: '1/2', signe: '>' },
+    { a: '2/5', b: '3/7', signe: '<' },
+    { a: '5/8', b: '7/8', signe: '<' }
+  ];
+  const k = pick(cases);
+  const toLx = f => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; };
+  const { choices, correctIdx } = makeQCM([
+    { html: '<', correct: k.signe === '<' },
+    { html: '>', correct: k.signe === '>' },
+    { html: '=', correct: k.signe === '=' }
+  ]);
+  return {
+    theme: 'calcul', title: 'Comparer deux fractions',
+    body: `Compare : \\(${toLx(k.a)} \\ldots ${toLx(k.b)}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On les met au même dénominateur, puis on compare les numérateurs.`,
+    help: {
+      cours: "Pour comparer deux fractions, on peut :<br>• les mettre au même dénominateur<br>• ou comparer à une valeur commune (1/2, 1, etc.)",
+      savoirFaire: "Même dénominateur → comparer les numérateurs.",
+      erreurs: ["Comparer directement numérateurs et dénominateurs.", "Se tromper de signe.", "Oublier de simplifier."]
+    }
+  };
+}
+
+
+/* ------------------------------------------------------------------
+   THÈME 2 — ARITHMÉTIQUE (premiers, décomposition, fractions égales)
+   ------------------------------------------------------------------ */
+
+function t2_premier() {
+  const cases = [
+    { n: 53, premier: true }, { n: 55, premier: false, div: '5 × 11' },
+    { n: 57, premier: false, div: '3 × 19' }, { n: 59, premier: true },
+    { n: 61, premier: true }, { n: 63, premier: false, div: '7 × 9' },
+    { n: 67, premier: true }, { n: 69, premier: false, div: '3 × 23' }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: 'Oui', correct: k.premier },
+    { html: 'Non', correct: !k.premier }
+  ]);
+  return {
+    theme: 'arithmetique', title: 'Nombre premier ?',
+    body: `Le nombre ${k.n} est-il premier ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: k.premier
+      ? `${k.n} est premier : il n'a que 1 et lui-même pour diviseurs.`
+      : `${k.n} n'est pas premier : ${k.n} = ${k.div}.`,
+    help: {
+      cours: "<b>Premier</b> : entier ≥ 2 ayant exactement 2 diviseurs (1 et lui-même). Premiers < 70 : 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67.",
+      savoirFaire: "Tester la divisibilité par 2, 3, 5, 7, 11…",
+      erreurs: ["Penser que 1 est premier.", "Oublier que 2 est premier.", "Confondre premier et impair."]
+    }
+  };
+}
+
+function t2_decomposition() {
+  const cases = [
+    { n: 12, dec: '2^2 \\times 3' },
+    { n: 18, dec: '2 \\times 3^2' },
+    { n: 24, dec: '2^3 \\times 3' },
+    { n: 60, dec: '2^2 \\times 3 \\times 5' },
+    { n: 100, dec: '2^2 \\times 5^2' },
+    { n: 84, dec: '2^2 \\times 3 \\times 7' }
+  ];
+  const k = pick(cases);
+  const distract = cases.filter(c => c.dec !== k.dec).slice(0, 3).map(c => c.dec);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.dec}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'arithmetique', title: 'Décomposition en facteurs premiers',
+    body: `Décomposer \\(${k.n}\\) en produit de facteurs premiers.`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On divise successivement par 2, 3, 5, 7… : \\(${k.n} = ${k.dec}\\).`,
+    help: {
+      cours: "Décomposer : écrire le nombre comme produit de premiers, éventuellement avec des puissances.",
+      savoirFaire: "Diviser par 2 tant que possible, puis 3, puis 5, puis 7…",
+      erreurs: ["Utiliser un non-premier (6 = 2×3).", "Oublier une puissance.", "Se tromper de calcul."]
+    }
+  };
+}
+
+
+function t2_frac_egales() {
+  const cases = [
+    { frac: '14/49', equivTo: '2/7', other: '4/17' },
+    { frac: '22/55', equivTo: '2/5', other: '4/11' },
+    { frac: '34/85', equivTo: '2/5', other: '17/50' },
+    { frac: '62/155', equivTo: '2/5', other: '31/80' }
+  ];
+  const k = pick(cases);
+  const toLx = f => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; };
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLx(k.equivTo)}\\)`, correct: true },
+    { html: `\\(${toLx(k.other)}\\)`, correct: false }
+  ]);
+  return {
+    theme: 'arithmetique', title: 'Fractions égales',
+    body: `À quelle fraction \\(${toLx(k.frac)}\\) est-elle égale ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On simplifie en divisant numérateur et dénominateur par leur facteur commun.`,
+    help: {
+      cours: "Deux fractions sont égales si l'une se déduit de l'autre par multiplication (ou division) par un même nombre non nul.",
+      savoirFaire: "Décomposer en facteurs premiers pour voir la simplification.",
+      erreurs: ["Additionner/soustraire au lieu de diviser.", "Simplifier seulement numérateur ou dénominateur.", "Oublier qu'on divise par le même facteur."]
+    }
+  };
+}
+
+function t2_simplifier() {
+  const cases = [
+    { num: 140, den: 135, r: '28/27' },
+    { num: 12, den: 30, r: '2/5' },
+    { num: 45, den: 75, r: '3/5' },
+    { num: 24, den: 36, r: '2/3' },
+    { num: 18, den: 48, r: '3/8' }
+  ];
+  const k = pick(cases);
+  const toLx = f => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; };
+  const pool = [k.r, '5/6', '3/4', '2/3', '1/2', '3/5', '4/5'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLx(k.r)}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${toLx(d)}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'arithmetique', title: 'Simplifier une fraction',
+    body: `Simplifier \\(${toLx(k.num + '/' + k.den)}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On divise numérateur et dénominateur par leur plus grand facteur commun.`,
+    help: {
+      cours: "Simplifier : diviser numérateur et dénominateur par un même nombre.",
+      savoirFaire: "Décomposer en facteurs premiers pour trouver les facteurs communs.",
+      erreurs: ["Diviser seulement numérateur ou dénominateur.", "S'arrêter trop tôt.", "Erreur de calcul."]
+    }
+  };
+}
+
+function t2_probleme_divisibilite() {
+  const cases = [
+    {
+      q: "Un fleuriste a 434 roses et 620 tulipes. Il veut composer des bouquets identiques en utilisant toutes les fleurs. Quel est le nombre maximum de bouquets ?",
+      r: 62,
+      sol: "On cherche le plus grand diviseur commun de 434 et 620. 434 = 2 × 7 × 31 ; 620 = 2² × 5 × 31. Diviseur commun maximal : 2 × 31 = 62 bouquets."
+    },
+    {
+      q: "Un boulanger a 36 pains au chocolat et 48 croissants. Il veut faire des paquets identiques en utilisant tout. Combien de paquets au maximum ?",
+      r: 12,
+      sol: "36 = 2² × 3² ; 48 = 2⁴ × 3. Plus grand diviseur commun : 2² × 3 = 12 paquets."
+    },
+    {
+      q: "Deux phares clignotent : l'un toutes les 12 s, l'autre toutes les 18 s. Ils clignotent ensemble à 12h00. Dans combien de secondes clignoteront-ils de nouveau ensemble ?",
+      r: 36,
+      sol: "On cherche le plus petit multiple commun : 12 = 2²×3, 18 = 2×3². Multiple commun minimal = 2²×3² = 36 secondes."
+    }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'arithmetique', title: 'Problème de divisibilité',
+    body: k.q,
+    type: 'input', expected: String(k.r),
+    solution: k.sol,
+    help: {
+      cours: "Partager en lots identiques → chercher un diviseur commun. Événement qui revient → chercher un multiple commun.",
+      savoirFaire: "Décomposer les nombres en facteurs premiers.",
+      erreurs: ["Additionner les quantités.", "Confondre diviseur et multiple.", "Chercher un diviseur trop petit."]
+    }
+  };
+}
+
+/* ------------------------------------------------------------------
+   THÈME 3 — CALCUL LITTÉRAL (distributivité simple, équations)
+   ------------------------------------------------------------------ */
+
+function t3_developper_simple() {
+  const cases = [
+    { expr: '3(4x - 2)', dev: '12x - 6' },
+    { expr: '3x(4 + 8x)', dev: '12x + 24x^2' },
+    { expr: '5(2x + 7)', dev: '10x + 35' },
+    { expr: '2(3x - 5)', dev: '6x - 10' },
+    { expr: '4x(x + 3)', dev: '4x^2 + 12x' },
+    { expr: '6(3 - 1{,}5x)', dev: '18 - 9x' }
+  ];
+  const k = pick(cases);
+  const distract = cases.filter(c => c.dev !== k.dev).slice(0, 3).map(c => c.dev);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.dev}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Développer (distributivité)',
+    body: `Développer : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Distributivité simple : \\(k(a+b) = ka + kb\\).`,
+    help: {
+      cours: "<b>Distributivité simple</b> : \\(k(a+b) = ka + kb\\).",
+      savoirFaire: "Multiplier le facteur extérieur par chaque terme de la parenthèse.",
+      erreurs: ["Oublier un terme.", "Se tromper de signe.", "Ne pas distribuer sur tous les termes."]
+    }
+  };
+}
+
+function t3_reduire() {
+  const cases = [
+    { expr: '17x + 4x(5 - x)', red: '-4x^2 + 37x' },
+    { expr: '6(3 - 1{,}5x) - 9x', red: '18 - 18x' },
+    { expr: '3(2x + 1) - (6 - x)', red: '7x - 3' },
+    { expr: '2x + 3x - 5', red: '5x - 5' },
+    { expr: '4x - 2(x - 3)', red: '2x + 6' }
+  ];
+  const k = pick(cases);
+  const distract = cases.filter(c => c.red !== k.red).slice(0, 3).map(c => c.red);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.red}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Développer et réduire',
+    body: `Développer et réduire : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Développer chaque produit, puis regrouper les termes semblables.`,
+    help: {
+      cours: "Réduire : regrouper les termes semblables (mêmes variables et mêmes puissances).",
+      savoirFaire: "1) Développer toutes les parenthèses. 2) Additionner les termes semblables.",
+      erreurs: ["Oublier de changer les signes en enlevant une parenthèse négative.", "Additionner des termes non semblables.", "Se tromper d'opération."]
+    }
+  };
+}
+
+function t3_factoriser_simple() {
+  const cases = [
+    { expr: '12x - 30', fact: '6(2x - 5)' },
+    { expr: '15x^2 + 18x', fact: '3x(5x + 6)' },
+    { expr: '27x^2 + 3', fact: '3(9x^2 + 1)' },
+    { expr: '5a + 15b', fact: '5(a + 3b)' },
+    { expr: '14x + 21', fact: '7(2x + 3)' }
+  ];
+  const k = pick(cases);
+  const distract = cases.filter(c => c.fact !== k.fact).slice(0, 3).map(c => c.fact);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.fact}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Factoriser (facteur commun)',
+    body: `Factoriser : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On met en facteur le plus grand terme commun.`,
+    help: {
+      cours: "Factoriser = inverse de développer. Trouver un facteur commun à tous les termes.",
+      savoirFaire: "Chercher le plus grand facteur commun (nombre et/ou lettre).",
+      erreurs: ["Facteur trop petit (factorisation incomplète).", "Oublier un des termes.", "Inverser avec le développement."]
+    }
+  };
+}
+
+function t3_tester_solution() {
+  const cases = [
+    { equation: '3x + 2 = 8', val: 4, solution: false, dev: '3×4+2 = 14 ≠ 8' },
+    { equation: '5x - 6 = 3x + 2', val: 4, solution: true, dev: '5×4−6 = 14 et 3×4+2 = 14 ✓' },
+    { equation: '2x + 5 = 9', val: 2, solution: true, dev: '2×2+5 = 9 ✓' },
+    { equation: '4x - 3 = 11', val: 3, solution: false, dev: '4×3−3 = 9 ≠ 11' },
+    { equation: '7x + 1 = 3x + 9', val: 2, solution: true, dev: '7×2+1 = 15 et 3×2+9 = 15 ✓' }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: 'Oui', correct: k.solution },
+    { html: 'Non', correct: !k.solution }
+  ]);
+  return {
+    theme: 'algebre', title: 'Tester une solution',
+    body: `Est-ce que \\(x = ${k.val}\\) est solution de l'équation \\(${k.equation}\\) ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On remplace x par sa valeur et on vérifie l'égalité : ${k.dev}.`,
+    help: {
+      cours: "Tester une solution : remplacer x par la valeur, calculer chaque membre, vérifier l'égalité.",
+      savoirFaire: "Respecter les priorités opératoires et les règles de signes.",
+      erreurs: ["Oublier un membre.", "Erreur de calcul.", "Confondre = et ≠."]
+    }
+  };
+}
+
+function t3_equation_simple() {
+  const cases = [
+    { a: 5, b: -7, c: 3, sol: '2' },
+    { a: 3, b: 1, c: 10, sol: '3' },
+    { a: 2, b: -5, c: 1, sol: '3' },
+    { a: 7, b: 0, c: 35, sol: '5' },
+    { a: 4, b: 4, c: 20, sol: '4' }
+  ];
+  const k = pick(cases);
+  const bPart = k.b === 0 ? '' : (k.b > 0 ? ` + ${k.b}` : ` - ${Math.abs(k.b)}`);
+  const eq = `${k.a}x${bPart} = ${k.c}`;
+  return {
+    theme: 'algebre', title: 'Équation ax + b = c',
+    body: `Résoudre : \\(${eq}\\).`,
+    type: 'input', expected: k.sol,
+    solution: `\\(${k.a}x = ${k.c - k.b}\\), donc \\(x = ${k.sol}\\).`,
+    help: {
+      cours: "Pour résoudre \\(ax + b = c\\) : soustraire b, puis diviser par a.",
+      savoirFaire: "Isoler progressivement x par opérations réciproques.",
+      erreurs: ["Changer de signe trop tôt.", "Diviser un seul membre.", "Oublier le signe de b."]
+    }
+  };
+}
+
+function t3_equation_ax_cx() {
+  const cases = [
+    { a: 2, b: 5, c: -1, d: -4 },
+    { a: 4, b: -8, c: 7, d: 4 },
+    { a: 3, b: 2, c: -2, d: 12 },
+    { a: 5, b: 1, c: 2, d: 10 }
+  ];
+  const k = pick(cases);
+  const sol = (k.d - k.b) / (k.a - k.c);
+  const fmtS = n => (n >= 0 ? '+ ' + n : '- ' + Math.abs(n));
+  const eq = `${k.a}x ${fmtS(k.b)} = ${k.c < 0 ? '-' + Math.abs(k.c) : k.c}x ${fmtS(k.d)}`;
+  const solStr = Number.isInteger(sol) ? String(sol) : sol.toFixed(2).replace('.', ',');
+  return {
+    theme: 'algebre', title: 'Équation ax + b = cx + d',
+    body: `Résoudre : \\(${eq}\\).`,
+    type: 'input', expected: [solStr, solStr.replace(',', '.')],
+    solution: `On regroupe les x d'un côté et les nombres de l'autre : \\(x = ${solStr}\\).`,
+    help: {
+      cours: "Pour résoudre ax + b = cx + d : regrouper les x d'un côté, les constantes de l'autre, puis diviser.",
+      savoirFaire: "1) Faire passer les x du même côté. 2) Faire passer les constantes de l'autre. 3) Diviser.",
+      erreurs: ["Oublier de changer le signe en déplaçant un terme.", "Se tromper de membre.", "Erreur de signe."]
+    }
+  };
+}
+
+function t3_equivalence_programmes() {
+  return {
+    theme: 'algebre', title: 'Équivalence de programmes',
+    body: "Voici deux programmes de calcul :<br><br><b>Programme A</b> : choisir un nombre, le tripler, puis ajouter 15.<br><b>Programme B</b> : choisir un nombre, ajouter 5, puis multiplier par 3.<br><br>Les deux programmes donnent-ils le même résultat pour tout nombre de départ ?",
+    type: 'qcm',
+    choices: [
+      "Oui, ils sont équivalents.",
+      "Non, ils ne donnent pas le même résultat.",
+      "Seulement pour certains nombres.",
+      "Impossible à dire sans calcul."
+    ],
+    correctIdx: 0,
+    solution: "Programme A : \\(x \\mapsto 3x + 15\\). Programme B : \\(x \\mapsto 3(x + 5) = 3x + 15\\). Les deux sont équivalents.",
+    help: {
+      cours: "Pour démontrer l'équivalence, on écrit chaque programme sous forme d'expression algébrique et on compare.",
+      savoirFaire: "Poser x au départ, traduire chaque étape, puis développer/réduire.",
+      erreurs: ["Tester quelques valeurs sans généraliser.", "Se tromper dans l'ordre des opérations.", "Oublier de développer."]
+    }
+  };
+}
+
+
+/* ------------------------------------------------------------------
+   THÈME 4 — PROPORTIONNALITÉ & POURCENTAGES (H2 validé)
+   ------------------------------------------------------------------ */
+
+function t4_pourcent_simple() {
+  const cases = [
+    { n: 80, p: 25, r: 20 },
+    { n: 60, p: 10, r: 6 },
+    { n: 200, p: 50, r: 100 },
+    { n: 40, p: 75, r: 30 },
+    { n: 120, p: 25, r: 30 },
+    { n: 300, p: 10, r: 30 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'pourcent', title: 'Pourcentage d\'une quantité',
+    body: `Combien font ${k.p}% de ${k.n} ?`,
+    type: 'input', expected: String(k.r),
+    solution: `\\(${k.p}\\% \\text{ de } ${k.n} = \\dfrac{${k.p}}{100} \\times ${k.n} = ${k.r}\\).`,
+    help: {
+      cours: "\\(p\\%\\) de \\(N\\) = \\(\\dfrac{p}{100} \\times N\\).",
+      savoirFaire: "Astuces : 10% = ÷10 ; 25% = ÷4 ; 50% = ÷2 ; 75% = les 3/4.",
+      erreurs: ["Oublier de diviser par 100.", "Confondre pourcentage et fraction.", "Erreur de calcul mental."]
+    }
+  };
+}
+
+function t4_quatrieme_prop() {
+  const cases = [
+    {
+      q: "8 briques identiques pèsent 13,6 kg. Combien pèsent 6 briques ?",
+      r: "10,2", sol: "\\(\\dfrac{13{,}6 \\times 6}{8} = 10{,}2\\) kg."
+    },
+    {
+      q: "3 litres de jus coûtent 4,5 €. Combien coûtent 5 litres ?",
+      r: "7,5", sol: "\\(\\dfrac{4{,}5 \\times 5}{3} = 7{,}5\\) €."
+    },
+    {
+      q: "Une voiture parcourt 180 km en 2 h. Combien parcourt-elle en 3 h ?",
+      r: "270", sol: "\\(\\dfrac{180 \\times 3}{2} = 270\\) km."
+    },
+    {
+      q: "7 cahiers coûtent 21 €. Combien coûtent 11 cahiers ?",
+      r: "33", sol: "Prix d'un cahier : 3 €. 11 × 3 = 33 €."
+    }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'pourcent', title: 'Quatrième proportionnelle',
+    body: k.q,
+    type: 'input', expected: [k.r, k.r.replace(',', '.')],
+    solution: k.sol,
+    help: {
+      cours: "Dans une situation de proportionnalité, on peut utiliser un tableau et le produit en croix.",
+      savoirFaire: "3 méthodes : coefficient de proportionnalité, produit en croix, ou passer par l'unité.",
+      erreurs: ["Additionner au lieu de multiplier.", "Se tromper de quantité à chercher.", "Oublier l'unité."]
+    }
+  };
+}
+
+function t4_reconnaitre_proportionnalite() {
+  return {
+    theme: 'pourcent', title: 'Reconnaître une situation de proportionnalité',
+    body: "Sur un graphique, à quelle condition l'ensemble des points représente-t-il une situation de proportionnalité ?",
+    type: 'qcm',
+    choices: [
+      "Les points sont alignés avec l'origine du repère.",
+      "Les points sont alignés (peu importe où).",
+      "Les points forment une parabole.",
+      "Les points forment un cercle."
+    ],
+    correctIdx: 0,
+    solution: "Les points doivent être <b>alignés</b> ET passer par l'origine.",
+    help: {
+      cours: "Proportionnalité ⇔ points alignés ET passant par l'origine.",
+      savoirFaire: "Vérifier l'alignement puis l'origine.",
+      erreurs: ["Oublier le passage par l'origine.", "Confondre avec une simple droite.", "Croire que tout graphique linéaire est proportionnel."]
+    }
+  };
+}
+
+function t4_vitesse_temps() {
+  const cases = [
+    { q: "Un véhicule roule à 90 km/h. Combien de km parcourt-il en 3 h ?", r: "270" },
+    { q: "Un train roule à 120 km/h. En combien d'heures parcourt-il 360 km ?", r: "3" },
+    { q: "Un piéton marche à 5 km/h. Combien de km parcourt-il en 2 h ?", r: "10" },
+    { q: "Un cycliste parcourt 60 km en 4 h. Quelle est sa vitesse moyenne en km/h ?", r: "15" }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'pourcent', title: 'Vitesse · temps · distance',
+    body: k.q,
+    type: 'input', expected: k.r,
+    solution: `Relation : \\(d = v \\times t\\). Donc \\(v = d/t\\) et \\(t = d/v\\).`,
+    help: {
+      cours: "Formule : \\(d = v \\times t\\) (distance = vitesse × temps).",
+      savoirFaire: "Identifier ce qu'on cherche (d, v ou t), appliquer la formule ou son réciproque.",
+      erreurs: ["Confondre les 3 grandeurs.", "Mauvaises unités (min vs h).", "Diviser quand il faut multiplier."]
+    }
+  };
+}
+
+/* ------------------------------------------------------------------
+   THÈME 5 — FONCTIONS (dépendance entre grandeurs)
+   ------------------------------------------------------------------ */
+
+function t5_lecture_graphique() {
+  return {
+    theme: 'fonctions', title: 'Lecture graphique',
+    body: `Sur un graphique représentant la température d'un four en fonction du temps, on lit que la courbe passe par le point \\((5 \\text{ min } ; \\, 95\\,°C)\\). Que peut-on en déduire ?`,
+    type: 'qcm',
+    choices: [
+      "Au bout de 5 minutes, la température du four est de 95 °C.",
+      "Au bout de 95 minutes, la température est de 5 °C.",
+      "La température augmente de 95 °C toutes les 5 minutes.",
+      "Il n'y a pas assez d'informations."
+    ],
+    correctIdx: 0,
+    solution: "L'abscisse est le temps, l'ordonnée est la température. Le point \\((5\\,;\\,95)\\) signifie qu'à \\(t=5\\) min, la température vaut 95 °C.",
+    help: {
+      cours: "Un point \\((x\\,;\\,y)\\) sur une courbe signifie que \\(y\\) est l'image de \\(x\\) par la fonction.",
+      savoirFaire: "Identifier l'axe horizontal (variable) et l'axe vertical (grandeur dépendante).",
+      erreurs: ["Inverser abscisse et ordonnée.", "Mal lire les unités.", "Confondre pente et valeur."]
+    }
+  };
+}
+
+function t5_formule_dependance() {
+  const cases = [
+    {
+      q: "On enlève 4 carrés identiques de côté \\(x\\) cm aux quatre coins d'un rectangle 20 cm × 13 cm. L'aire restante (en cm²) s'exprime par :",
+      r: "260 - 4x^2",
+      distract: ["260 - x^2", "260 + 4x^2", "4x^2"]
+    },
+    {
+      q: "Le périmètre d'un carré de côté \\(c\\) est donné par :",
+      r: "4c",
+      distract: ["c^2", "c + 4", "2c"]
+    },
+    {
+      q: "Un taxi facture 3 € de prise en charge + 2 € par km. Le prix pour \\(x\\) km est :",
+      r: "3 + 2x",
+      distract: ["2 + 3x", "3x + 2", "5x"]
+    }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...k.distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'fonctions', title: 'Formule de dépendance',
+    body: k.q,
+    type: 'qcm', choices, correctIdx,
+    solution: `On écrit la formule en introduisant la variable.`,
+    help: {
+      cours: "Pour exprimer une grandeur en fonction d'une autre, on identifie la variable et on écrit la formule.",
+      savoirFaire: "Chercher la structure : constante + coefficient × variable ? produit ? différence ?",
+      erreurs: ["Oublier un terme.", "Mal identifier la variable.", "Inverser l'ordre des opérations."]
+    }
+  };
+}
+
+function t5_image_simple() {
+  const cases = [
+    { fx: 'x^2', x: 4, r: 16 },
+    { fx: '2x + 5', x: 3, r: 11 },
+    { fx: '3x - 1', x: 2, r: 5 },
+    { fx: 'x^2 - 3', x: 5, r: 22 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'fonctions', title: 'Image d\'un nombre',
+    body: `Si \\(f(x) = ${k.fx}\\), que vaut \\(f(${k.x})\\) ?`,
+    type: 'input', expected: String(k.r),
+    solution: `On remplace \\(x\\) par \\(${k.x}\\) : \\(f(${k.x}) = ${k.r}\\).`,
+    help: {
+      cours: "L'image de \\(x\\) par \\(f\\) se note \\(f(x)\\). Pour la calculer : remplacer \\(x\\) par sa valeur.",
+      savoirFaire: "Bien respecter les priorités opératoires après substitution.",
+      erreurs: ["Oublier les parenthèses autour de la valeur.", "Erreur de calcul.", "Confondre f(x) et x."]
+    }
+  };
+}
+
+
+/* ------------------------------------------------------------------
+   THÈME 6 — GÉOMÉTRIE (Pythagore, Thalès emboîtés, cosinus, cas d'égalité)
+   ------------------------------------------------------------------ */
+
+// Triangle rectangle SVG
+function svgRectSimple({ a, b, hypLabel = '?' } = {}) {
+  const W = 260, H = 200, pad = 40;
+  const Bx = pad, By = H - pad;
+  const Ax = Bx, Ay = pad;
+  const Cx = W - pad, Cy = By;
+  const sq = 10;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block;margin:10px auto;background:#fcfcfc;border:1px solid #ddd;border-radius:8px;">
+    <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" fill="#e0f2fe" stroke="#333" stroke-width="1.5"/>
+    <path d="M ${Bx} ${By-sq} h ${sq} v ${sq}" fill="none" stroke="#333" stroke-width="1.2"/>
+    <text x="${Ax-18}" y="${Ay+4}" font-size="14" font-weight="700">A</text>
+    <text x="${Bx-18}" y="${By+6}" font-size="14" font-weight="700">B</text>
+    <text x="${Cx+8}" y="${Cy+6}" font-size="14" font-weight="700">C</text>
+    <text x="${Ax-10}" y="${(Ay+By)/2}" font-size="13" fill="#0284c7" text-anchor="end">${a}</text>
+    <text x="${(Bx+Cx)/2}" y="${By+20}" font-size="13" fill="#0284c7" text-anchor="middle">${b}</text>
+    <text x="${(Ax+Cx)/2+12}" y="${(Ay+Cy)/2-4}" font-size="13" fill="#c4342a">${hypLabel}</text>
+  </svg>`;
+}
+
+function t6_pythagore_hyp() {
+  const cases = [
+    { a: 3, b: 4, h: 5 }, { a: 6, b: 8, h: 10 },
+    { a: 5, b: 12, h: 13 }, { a: 9, b: 12, h: 15 },
+    { a: 8, b: 15, h: 17 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'geometrie', title: 'Pythagore — calcul de l\'hypoténuse',
+    body: `Un triangle ABC est rectangle en B. On a AB = ${k.a} cm et BC = ${k.b} cm. Calculer AC (en cm).${svgRectSimple({ a: k.a + ' cm', b: k.b + ' cm', hypLabel: '?' })}`,
+    type: 'input', expected: String(k.h),
+    solution: `D'après le théorème de Pythagore : \\(AC^2 = AB^2 + BC^2 = ${k.a*k.a} + ${k.b*k.b} = ${k.a*k.a + k.b*k.b}\\). Donc \\(AC = \\sqrt{${k.a*k.a + k.b*k.b}} = ${k.h}\\) cm.`,
+    help: {
+      cours: "<b>Théorème de Pythagore</b> : dans un triangle rectangle, le carré de l'hypoténuse = somme des carrés des deux autres côtés.",
+      savoirFaire: "Repérer l'hypoténuse (face à l'angle droit), écrire l'égalité, calculer la racine.",
+      erreurs: ["Ajouter les côtés au lieu de leurs carrés.", "Se tromper d'hypoténuse.", "Oublier la racine carrée."]
+    }
+  };
+}
+
+function t6_pythagore_cote() {
+  const cases = [
+    { h: 5, a: 3, b: 4 }, { h: 10, a: 6, b: 8 },
+    { h: 13, a: 5, b: 12 }, { h: 15, a: 9, b: 12 },
+    { h: 17, a: 8, b: 15 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'geometrie', title: 'Pythagore — calcul d\'un côté',
+    body: `Un triangle ABC est rectangle en B. L'hypoténuse AC mesure ${k.h} cm et AB mesure ${k.a} cm. Calculer BC (en cm).${svgRectSimple({ a: k.a + ' cm', b: '?', hypLabel: k.h + ' cm' })}`,
+    type: 'input', expected: String(k.b),
+    solution: `\\(AC^2 = AB^2 + BC^2\\), donc \\(BC^2 = ${k.h}^2 - ${k.a}^2 = ${k.h*k.h - k.a*k.a}\\), donc \\(BC = ${k.b}\\) cm.`,
+    help: {
+      cours: "Pour trouver un côté (non hypoténuse) : soustraire les carrés (\\(BC^2 = AC^2 - AB^2\\)).",
+      savoirFaire: "Soustraire (et non additionner), puis racine carrée.",
+      erreurs: ["Ajouter au lieu de soustraire.", "Prendre l'hypoténuse pour un côté.", "Oublier la racine."]
+    }
+  };
+}
+
+function t6_pythagore_reciproque() {
+  const cases = [
+    { a: 42, b: 40, c: 58, rect: true },     // 42²+40² = 1764+1600 = 3364 = 58² ✓
+    { a: 3, b: 4, c: 5, rect: true },
+    { a: 6, b: 7, c: 10, rect: false },      // 36+49=85 ≠ 100
+    { a: 5, b: 12, c: 13, rect: true },
+    { a: 7, b: 8, c: 12, rect: false }       // 49+64=113 ≠ 144
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: 'Oui, il est rectangle.', correct: k.rect },
+    { html: 'Non, il n\'est pas rectangle.', correct: !k.rect }
+  ]);
+  const max = Math.max(k.a, k.b, k.c);
+  const others = [k.a, k.b, k.c].filter(x => x !== max);
+  const lhs = others[0]**2 + others[1]**2;
+  const rhs = max**2;
+  return {
+    theme: 'geometrie', title: 'Réciproque de Pythagore',
+    body: `Un triangle a pour côtés ${k.a} cm, ${k.b} cm et ${k.c} cm. Ce triangle est-il rectangle ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: k.rect
+      ? `Le plus grand côté est ${max}. \\(${others[0]}^2 + ${others[1]}^2 = ${lhs}\\) et \\(${max}^2 = ${rhs}\\). Comme ${lhs} = ${rhs}, le triangle est rectangle.`
+      : `\\(${others[0]}^2 + ${others[1]}^2 = ${lhs}\\) et \\(${max}^2 = ${rhs}\\). Comme ${lhs} ≠ ${rhs}, le triangle n'est pas rectangle.`,
+    help: {
+      cours: "<b>Réciproque de Pythagore</b> : si la somme des carrés des 2 plus petits côtés = carré du plus grand, alors le triangle est rectangle.",
+      savoirFaire: "1) Identifier le plus grand côté. 2) Calculer séparément \\(a^2 + b^2\\) et \\(c^2\\). 3) Comparer.",
+      erreurs: ["Oublier d'identifier le plus grand côté.", "Calcul d'un seul membre.", "Confondre direct et réciproque."]
+    }
+  };
+}
+
+function t6_cosinus() {
+  const cases = [
+    { adj: 5, hyp: 13, angleDeg: 67 },
+    { adj: 3, hyp: 5, angleDeg: 53 },
+    { adj: 8, hyp: 17, angleDeg: 62 },
+    { adj: 12, hyp: 13, angleDeg: 23 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'geometrie', title: 'Cosinus — relation côté / hypoténuse',
+    body: `Dans un triangle rectangle, le côté adjacent à un angle vaut ${k.adj} cm et l'hypoténuse vaut ${k.hyp} cm. Quelle est l'expression du cosinus de cet angle ?`,
+    type: 'qcm',
+    choices: [
+      `\\(\\cos(\\widehat{A}) = \\dfrac{${k.adj}}{${k.hyp}}\\)`,
+      `\\(\\cos(\\widehat{A}) = \\dfrac{${k.hyp}}{${k.adj}}\\)`,
+      `\\(\\cos(\\widehat{A}) = ${k.adj} \\times ${k.hyp}\\)`,
+      `\\(\\cos(\\widehat{A}) = ${k.adj} + ${k.hyp}\\)`
+    ],
+    correctIdx: 0,
+    solution: `\\(\\cos(\\widehat{A}) = \\dfrac{\\text{côté adjacent}}{\\text{hypoténuse}} = \\dfrac{${k.adj}}{${k.hyp}}\\).`,
+    help: {
+      cours: "<b>Cosinus</b> d'un angle aigu dans un triangle rectangle : \\(\\cos(\\alpha) = \\dfrac{\\text{adjacent}}{\\text{hypoténuse}}\\).",
+      savoirFaire: "Identifier l'angle, puis repérer son côté adjacent et l'hypoténuse.",
+      erreurs: ["Inverser adjacent et hypoténuse.", "Confondre avec sinus ou tangente.", "Oublier que c'est un triangle rectangle."]
+    }
+  };
+}
+
+function t6_thales_direct() {
+  const cases = [
+    { AB: 7.5, AC: 3, BD: 5.4, CD: 9, AE: 4.32 },
+    { AB: 10, AC: 4, AD: 6, AE: 2.4 },
+    { AB: 6, AC: 9, AD: 4, AE: 6 }
+  ];
+  return {
+    theme: 'geometrie', title: 'Thalès (triangles emboîtés) — proportionnalité',
+    body: "Dans une configuration de Thalès en triangles emboîtés, que peut-on dire des rapports de longueurs ?",
+    type: 'qcm',
+    choices: [
+      "Les rapports \\(\\dfrac{AM}{AB}\\), \\(\\dfrac{AN}{AC}\\) et \\(\\dfrac{MN}{BC}\\) sont tous égaux.",
+      "Les rapports \\(AM/MB\\) et \\(AN/NC\\) sont égaux, mais pas le 3ème.",
+      "Les trois longueurs AM, AN, MN sont égales.",
+      "Aucune relation particulière."
+    ],
+    correctIdx: 0,
+    solution: "Théorème de Thalès : dans la configuration triangles emboîtés, \\(\\dfrac{AM}{AB} = \\dfrac{AN}{AC} = \\dfrac{MN}{BC}\\).",
+    help: {
+      cours: "<b>Théorème de Thalès</b> (emboîtés) : si \\((MN) \\parallel (BC)\\), alors \\(\\dfrac{AM}{AB} = \\dfrac{AN}{AC} = \\dfrac{MN}{BC}\\).",
+      savoirFaire: "Respecter l'ordre des points pour écrire correctement les rapports.",
+      erreurs: ["Mélanger les longueurs.", "Inverser numérateur et dénominateur.", "Oublier le parallélisme."]
+    }
+  };
+}
+
+function t6_thales_reciproque() {
+  return {
+    theme: 'geometrie', title: 'Réciproque de Thalès',
+    body: "Comment montre-t-on, à l'aide de la réciproque de Thalès, que deux droites sont parallèles ?",
+    type: 'qcm',
+    choices: [
+      "Si les rapports \\(AM/AB\\) et \\(AN/AC\\) sont égaux (points dans le même ordre), alors (MN) // (BC).",
+      "Si les triangles ont la même aire, alors les droites sont parallèles.",
+      "Si \\(AM = AN\\), alors les droites sont parallèles.",
+      "Si les triangles sont rectangles, alors les droites sont parallèles."
+    ],
+    correctIdx: 0,
+    solution: "Réciproque de Thalès : si \\(\\dfrac{AM}{AB} = \\dfrac{AN}{AC}\\) et que les points sont alignés dans le même ordre, alors \\((MN) \\parallel (BC)\\).",
+    help: {
+      cours: "Pour conclure au parallélisme avec Thalès : vérifier l'égalité des deux rapports ET l'ordre des points.",
+      savoirFaire: "Bien vérifier l'alignement et l'ordre avant d'invoquer la réciproque.",
+      erreurs: ["Oublier l'ordre des points.", "Utiliser 3 rapports (suffit 2 pour la réciproque).", "Mélanger direct et réciproque."]
+    }
+  };
+}
+
+function t6_cas_egalite() {
+  const cases = [
+    {
+      q: "Deux triangles ont leurs trois côtés respectivement égaux. Peut-on affirmer qu'ils sont égaux ?",
+      a: "Oui, c'est le 1er cas d'égalité (3 côtés).",
+      opts: ["Oui, c'est le 1er cas d'égalité (3 côtés).", "Non, il faut aussi que les angles soient égaux.", "Seulement si ils sont rectangles.", "Impossible à dire."]
+    },
+    {
+      q: "Deux triangles ont deux côtés et l'angle compris égaux. Peut-on affirmer qu'ils sont égaux ?",
+      a: "Oui, c'est le 2e cas d'égalité (2 côtés + angle compris).",
+      opts: ["Oui, c'est le 2e cas d'égalité (2 côtés + angle compris).", "Non, il manque un côté.", "Seulement si isocèle.", "Impossible."]
+    }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: k.a, correct: true },
+    ...k.opts.filter(o => o !== k.a).map(o => ({ html: o, correct: false }))
+  ]);
+  return {
+    theme: 'geometrie', title: 'Cas d\'égalité des triangles',
+    body: k.q,
+    type: 'qcm', choices, correctIdx,
+    solution: `La réponse est : <b>${k.a}</b>.`,
+    help: {
+      cours: "<b>3 cas d'égalité</b> : (1) 3 côtés égaux ; (2) 2 côtés + angle compris ; (3) 1 côté + 2 angles adjacents.",
+      savoirFaire: "Identifier le cas qui s'applique (éléments donnés).",
+      erreurs: ["Confondre angle compris et angle opposé.", "Oublier un cas d'égalité.", "Confondre avec les triangles semblables."]
+    }
+  };
+}
+
+function t6_translation_conservation() {
+  return {
+    theme: 'transformations', title: 'Propriétés de la translation',
+    body: "Par une translation, qu'est-ce qui est conservé ?",
+    type: 'qcm',
+    choices: [
+      "Les longueurs, les angles, le parallélisme et les aires.",
+      "Seulement les longueurs.",
+      "Seulement les angles.",
+      "Rien, tout change."
+    ],
+    correctIdx: 0,
+    solution: "Une translation <b>conserve</b> : les longueurs, les angles, le parallélisme et les aires.",
+    help: {
+      cours: "Une <b>translation</b> décale toutes les figures de la même manière. Elle conserve tout (longueurs, angles, aires, parallélisme).",
+      savoirFaire: "Penser à la flèche qui décale : la figure ne se déforme pas.",
+      erreurs: ["Confondre avec homothétie (qui agrandit).", "Penser que les aires changent.", "Oublier la conservation des angles."]
+    }
+  };
+}
+
+function t6_homothetie_rapport() {
+  const cases = [
+    { L0: 12, rapport: 3, type: 'longueur', r: 36 },
+    { L0: 12, rapport: 3, type: 'aire', r: 9*12 },  // aire × k²
+    { L0: 6, rapport: 2, type: 'volume', r: 8*6 },  // volume × k³
+    { A0: 20, rapport: 2, type: 'aire', r: 80 }
+  ];
+  const k = pick(cases);
+  const qLongueur = k.type === 'longueur'
+    ? `Une longueur mesure ${k.L0} cm. Quelle est sa mesure après un agrandissement de rapport ${k.rapport} ?`
+    : null;
+  const qAire = k.type === 'aire'
+    ? `Une figure a une aire de ${k.A0 || k.L0} cm². Quelle est son aire après un agrandissement de rapport ${k.rapport} ?`
+    : null;
+  const qVolume = k.type === 'volume'
+    ? `Un solide a un volume de ${k.L0} cm³. Quel est son volume après un agrandissement de rapport ${k.rapport} ?`
+    : null;
+  const q = qLongueur || qAire || qVolume;
+  const unit = k.type === 'longueur' ? 'cm' : (k.type === 'aire' ? 'cm²' : 'cm³');
+  return {
+    theme: 'transformations', title: `Agrandissement — effet sur les ${k.type}s`,
+    body: q,
+    type: 'input', expected: String(k.r), suffix: unit,
+    solution: k.type === 'longueur'
+      ? `Longueur multipliée par le rapport : \\(${k.L0} \\times ${k.rapport} = ${k.r}\\) cm.`
+      : k.type === 'aire'
+        ? `Aire multipliée par le <b>carré</b> du rapport : \\(${k.A0 || k.L0} \\times ${k.rapport}^2 = ${k.r}\\) cm².`
+        : `Volume multiplié par le <b>cube</b> du rapport : \\(${k.L0} \\times ${k.rapport}^3 = ${k.r}\\) cm³.`,
+    help: {
+      cours: "Agrandissement de rapport \\(k\\) : longueurs × \\(k\\), aires × \\(k^2\\), volumes × \\(k^3\\).",
+      savoirFaire: "Distinguer longueur (×k), aire (×k²), volume (×k³).",
+      erreurs: ["Multiplier l'aire par k au lieu de k².", "Multiplier le volume par k² au lieu de k³.", "Oublier l'élévation à la puissance."]
+    }
+  };
+}
+
+
+/* ------------------------------------------------------------------
+   THÈME 7 — ESPACE (pyramide, cône, repérage pavé droit)
+   ------------------------------------------------------------------ */
+
+function t7_volume_pyramide() {
+  const cases = [
+    { base: 36, h: 5, r: 60 },   // (1/3) × 36 × 5 = 60
+    { base: 9, h: 4, r: 12 },
+    { base: 25, h: 6, r: 50 },
+    { base: 16, h: 9, r: 48 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'espace', title: 'Volume d\'une pyramide',
+    body: `Une pyramide a pour aire de base ${k.base} cm² et hauteur ${k.h} cm. Quel est son volume (en cm³) ?`,
+    type: 'input', expected: String(k.r), suffix: 'cm³',
+    solution: `\\(V = \\dfrac{1}{3} \\times \\text{aire base} \\times h = \\dfrac{1}{3} \\times ${k.base} \\times ${k.h} = ${k.r}\\) cm³.`,
+    help: {
+      cours: "Volume d'une <b>pyramide</b> : \\(V = \\dfrac{1}{3} \\times \\text{aire base} \\times h\\).",
+      savoirFaire: "Calculer l'aire de la base, multiplier par la hauteur, diviser par 3.",
+      erreurs: ["Oublier le \\(\\dfrac{1}{3}\\).", "Confondre avec le volume d'un pavé.", "Prendre le périmètre au lieu de l'aire."]
+    }
+  };
+}
+
+function t7_volume_cone() {
+  const cases = [
+    { r: 3, h: 4, val: '12\\pi' },   // (1/3) × π × 9 × 4 = 12π
+    { r: 2, h: 9, val: '12\\pi' },
+    { r: 5, h: 6, val: '50\\pi' },
+    { r: 6, h: 2, val: '24\\pi' }
+  ];
+  const k = pick(cases);
+  const pool = ['12\\pi', '50\\pi', '24\\pi', '36\\pi', '6\\pi'];
+  const distract = shuffle(pool.filter(x => x !== k.val)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.val}\\) cm³`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\) cm³`, correct: false }))
+  ]);
+  return {
+    theme: 'espace', title: 'Volume d\'un cône',
+    body: `Un cône a pour rayon ${k.r} cm et hauteur ${k.h} cm. Quel est son volume ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(V = \\dfrac{1}{3} \\pi r^2 h = \\dfrac{1}{3} \\times \\pi \\times ${k.r}^2 \\times ${k.h} = ${k.val}\\) cm³.`,
+    help: {
+      cours: "Volume d'un <b>cône</b> : \\(V = \\dfrac{1}{3} \\pi r^2 h\\) (= 1/3 × volume du cylindre de même base et hauteur).",
+      savoirFaire: "Élever le rayon au carré, puis multiplier par la hauteur, puis par π, puis diviser par 3.",
+      erreurs: ["Oublier \\(\\dfrac{1}{3}\\).", "Utiliser le diamètre au lieu du rayon.", "Oublier d'élever au carré."]
+    }
+  };
+}
+
+function t7_repere_pave() {
+  return {
+    theme: 'espace', title: 'Repérage dans un pavé droit',
+    body: "Dans un repère de l'espace attaché à un pavé droit (longueur 3, largeur 2, hauteur 4), les coordonnées d'un sommet se lisent :",
+    type: 'qcm',
+    choices: [
+      "(abscisse ; ordonnée ; altitude)",
+      "(longueur ; largeur ; hauteur)",
+      "(x ; y)",
+      "(rayon ; angle)"
+    ],
+    correctIdx: 0,
+    solution: "Dans l'espace, on utilise trois coordonnées : <b>abscisse, ordonnée, altitude</b>.",
+    help: {
+      cours: "Dans l'espace, un point se repère par <b>3 coordonnées</b> : abscisse (x), ordonnée (y) et altitude (z).",
+      savoirFaire: "Lire l'axe sur lequel le point se projette pour chaque coordonnée.",
+      erreurs: ["Oublier l'altitude.", "Confondre abscisse et ordonnée.", "Inverser les axes."]
+    }
+  };
+}
+
+/* ------------------------------------------------------------------
+   THÈME 8 — GRANDEURS (conversions composées)
+   ------------------------------------------------------------------ */
+
+function t8_conv_vitesse() {
+  const cases = [
+    { v: 72, unit: 'km/h', vOut: 20, unitOut: 'm/s' },  // 72/3.6=20
+    { v: 36, unit: 'km/h', vOut: 10, unitOut: 'm/s' },
+    { v: 5, unit: 'm/s', vOut: 18, unitOut: 'km/h' },
+    { v: 15, unit: 'm/s', vOut: 54, unitOut: 'km/h' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'mesures', title: 'Conversion de vitesses',
+    body: `Convertir ${k.v} ${k.unit} en ${k.unitOut}.`,
+    type: 'input', expected: String(k.vOut), suffix: k.unitOut,
+    solution: `Pour passer de km/h à m/s, on divise par 3,6. Pour l'inverse, on multiplie par 3,6.`,
+    help: {
+      cours: "1 m/s = 3,6 km/h (car 1 km = 1000 m et 1 h = 3600 s).",
+      savoirFaire: "km/h → m/s : ÷3,6. m/s → km/h : ×3,6.",
+      erreurs: ["Confondre les deux sens.", "Multiplier au lieu de diviser.", "Oublier les unités."]
+    }
+  };
+}
+
+function t8_conv_debit() {
+  const cases = [
+    { v: 2, unit: 'L/min', vOut: 120, unitOut: 'L/h' },
+    { v: 60, unit: 'L/h', vOut: 1, unitOut: 'L/min' },
+    { v: 1, unit: 'm³/s', vOut: 60000, unitOut: 'L/min' },
+    { v: 3000, unit: 'L/min', vOut: 50, unitOut: 'L/s' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'mesures', title: 'Conversion de débits',
+    body: `Convertir ${k.v} ${k.unit} en ${k.unitOut}.`,
+    type: 'input', expected: String(k.vOut), suffix: k.unitOut,
+    solution: `Utiliser les relations entre unités de temps (60 s = 1 min = 1/60 h) et de volume (1 m³ = 1000 L).`,
+    help: {
+      cours: "1 m³ = 1000 L. 1 h = 60 min = 3600 s.",
+      savoirFaire: "Décomposer la conversion : temps d'abord, puis volume.",
+      erreurs: ["Confondre le sens.", "Oublier les facteurs 60 et 1000.", "Erreur de calcul."]
+    }
+  };
+}
+
+function t8_grandeur_composee() {
+  const cases = [
+    { q: "Un mobile roule à 10 m/s pendant 12 s. Quelle distance parcourt-il (en m) ?", r: 120, sol: "\\(d = v \\times t = 10 \\times 12 = 120\\) m." },
+    { q: "Un robinet a un débit de 3 L/s. Combien coule-t-il en 20 s (en L) ?", r: 60, sol: "\\(V = d \\times t = 3 \\times 20 = 60\\) L." },
+    { q: "Un train roule à 150 km/h pendant 2 h. Quelle distance parcourt-il (en km) ?", r: 300, sol: "\\(150 \\times 2 = 300\\) km." },
+    { q: "Une citerne de 2400 L se vide en 8 min. Quel est le débit (en L/min) ?", r: 300, sol: "\\(2400 \\div 8 = 300\\) L/min." }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'mesures', title: 'Grandeurs composées',
+    body: k.q,
+    type: 'input', expected: String(k.r),
+    solution: k.sol,
+    help: {
+      cours: "Grandeurs composées : vitesse (m/s, km/h), débit (L/s, m³/min)…<br>• Distance = vitesse × temps<br>• Volume = débit × temps",
+      savoirFaire: "Identifier l'unité et appliquer la formule correcte.",
+      erreurs: ["Mélanger les unités (min/s/h).", "Multiplier au lieu de diviser.", "Oublier l'unité finale."]
+    }
+  };
+}
+
+/* ------------------------------------------------------------------
+   THÈME 9 — STATISTIQUES (médiane, fréquence, étendue)
+   ------------------------------------------------------------------ */
+
+function t9_mediane() {
+  const cases = [
+    { serie: [3, 5, 7, 9, 11], mediane: 7 },     // impair : milieu
+    { serie: [2, 4, 6, 8], mediane: 5 },         // pair : moyenne des deux milieux
+    { serie: [10, 12, 14, 16, 18, 20, 22], mediane: 16 },
+    { serie: [5, 10, 15, 20, 25, 30], mediane: 17.5 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'stats', title: 'Médiane',
+    body: `Calculer la médiane de la série : ${k.serie.join(' ; ')}.`,
+    type: 'input', expected: [String(k.mediane), String(k.mediane).replace('.', ',')],
+    solution: k.serie.length % 2 === 1
+      ? `Il y a ${k.serie.length} valeurs. La médiane est la ${Math.ceil(k.serie.length/2)}-ème : <b>${k.mediane}</b>.`
+      : `Il y a ${k.serie.length} valeurs (pair). La médiane est la moyenne des deux valeurs du milieu : <b>${k.mediane}</b>.`,
+    help: {
+      cours: "<b>Médiane</b> : valeur qui partage une série ordonnée en deux moitiés égales.",
+      savoirFaire: "1) Ordonner la série. 2) Si effectif impair : valeur du milieu. Si pair : moyenne des deux valeurs centrales.",
+      erreurs: ["Oublier d'ordonner.", "Confondre médiane et moyenne.", "Mal compter le milieu."]
+    }
+  };
+}
+
+function t9_etendue() {
+  const cases = [
+    { serie: [12, 18, 5, 22, 9], r: 17 },
+    { serie: [3, 7, 15, 2, 9], r: 13 },
+    { serie: [100, 50, 75, 25, 90], r: 75 },
+    { serie: [4, 4, 5, 5, 4], r: 1 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'stats', title: 'Étendue',
+    body: `Quelle est l'étendue de la série : ${k.serie.join(' ; ')} ?`,
+    type: 'input', expected: String(k.r),
+    solution: `Étendue = max − min = ${Math.max(...k.serie)} − ${Math.min(...k.serie)} = ${k.r}.`,
+    help: {
+      cours: "<b>Étendue</b> = plus grande valeur − plus petite valeur.",
+      savoirFaire: "Identifier le max et le min, puis soustraire.",
+      erreurs: ["Confondre étendue et médiane.", "Additionner au lieu de soustraire.", "Mal identifier max/min."]
+    }
+  };
+}
+
+function t9_frequence() {
+  const cases = [
+    { effectif: 5, total: 20, r: '25' },    // 5/20 = 0.25 = 25%
+    { effectif: 3, total: 12, r: '25' },
+    { effectif: 4, total: 10, r: '40' },
+    { effectif: 7, total: 25, r: '28' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'stats', title: 'Fréquence en pourcentage',
+    body: `Dans une classe de ${k.total} élèves, ${k.effectif} font du sport. Quelle est la fréquence en % ?`,
+    type: 'input', expected: String(k.r), suffix: '%',
+    solution: `\\(\\text{fréquence} = \\dfrac{${k.effectif}}{${k.total}} \\times 100 = ${k.r}\\%\\).`,
+    help: {
+      cours: "<b>Fréquence</b> = effectif / effectif total. Peut s'exprimer en décimal ou en %.",
+      savoirFaire: "Diviser effectif par total, puis multiplier par 100 pour obtenir le %.",
+      erreurs: ["Oublier la multiplication par 100.", "Inverser numérateur et dénominateur.", "Confondre fréquence et effectif."]
+    }
+  };
+}
+
+function t9_diagramme_circulaire() {
+  return {
+    theme: 'stats', title: 'Diagramme circulaire — angle',
+    body: "Un club a 36 adhérents. 12 aiment le foot. Quel angle (en °) doit-on tracer pour représenter le foot sur un diagramme circulaire ?",
+    type: 'input', expected: '120', suffix: '°',
+    solution: "\\(\\dfrac{12}{36} \\times 360° = 120°\\).",
+    help: {
+      cours: "Diagramme circulaire : chaque secteur a un angle proportionnel à l'effectif. Le tour complet = 360°.",
+      savoirFaire: "Angle = (effectif / effectif total) × 360°.",
+      erreurs: ["Oublier de multiplier par 360.", "Confondre avec pourcentage.", "Mauvais calcul de proportion."]
+    }
+  };
+}
+
+/* ------------------------------------------------------------------
+   THÈME 10 — PROBABILITÉS (événements, contraire, équiprobabilité)
+   ------------------------------------------------------------------ */
+
+function t10_vocabulaire_proba() {
+  const cases = [
+    { q: "Quel est un événement certain quand on lance un dé à 6 faces ?", a: "Obtenir un numéro entre 1 et 6.", opts: ["Obtenir un numéro entre 1 et 6.", "Obtenir 7.", "Obtenir un 2.", "Obtenir 0."] },
+    { q: "Quel est un événement impossible quand on lance un dé à 6 faces ?", a: "Obtenir 7.", opts: ["Obtenir 7.", "Obtenir 3.", "Obtenir un nombre pair.", "Obtenir un nombre entre 1 et 6."] },
+    { q: "Dans une urne avec 3 boules rouges et 2 bleues, quelle probabilité est impossible ?", a: "1,5", opts: ["1,5", "0", "1", "0,4"] }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: k.a, correct: true },
+    ...k.opts.filter(o => o !== k.a).map(o => ({ html: o, correct: false }))
+  ]);
+  return {
+    theme: 'probas', title: 'Vocabulaire des probabilités',
+    body: k.q,
+    type: 'qcm', choices, correctIdx,
+    solution: `La réponse : <b>${k.a}</b>.`,
+    help: {
+      cours: "<b>Événement certain</b> : probabilité 1. <b>Impossible</b> : probabilité 0. Toute probabilité est entre 0 et 1.",
+      savoirFaire: "Toujours vérifier que la probabilité est entre 0 et 1 (ou 0% et 100%).",
+      erreurs: ["Confondre certain et probable.", "Probabilité > 1.", "Confondre événement et issue."]
+    }
+  };
+}
+
+function t10_proba_contraire() {
+  const cases = [
+    { p: '0,4', cont: '0,6' },
+    { p: '0,25', cont: '0,75' },
+    { p: '1/5', cont: '4/5' },
+    { p: '3/10', cont: '7/10' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'probas', title: 'Événement contraire',
+    body: `La probabilité de gagner à un jeu est \\(${k.p}\\). Quelle est la probabilité de perdre ?`,
+    type: 'input', expected: [k.cont, k.cont.replace('/', '/')],
+    solution: `\\(P(\\bar{A}) = 1 - P(A) = 1 - ${k.p} = ${k.cont}\\).`,
+    help: {
+      cours: "Probabilité de l'<b>événement contraire</b> : \\(P(\\bar{A}) = 1 - P(A)\\).",
+      savoirFaire: "Soustraire la probabilité donnée à 1.",
+      erreurs: ["Oublier de soustraire à 1.", "Ajouter au lieu de soustraire.", "Confondre avec impossible."]
+    }
+  };
+}
+
+function t10_proba_simple() {
+  const cases = [
+    { q: "Dans une urne, il y a 1 boule rouge et 4 oranges. Probabilité de tirer une orange ?", r: '4/5' },
+    { q: "On lance un dé à 6 faces. Probabilité d'obtenir un nombre pair ?", r: '1/2' },
+    { q: "Un sac contient 5 jetons verts et 3 rouges. Probabilité de tirer un vert ?", r: '5/8' },
+    { q: "On tire une carte parmi 52. Probabilité de tirer un cœur (13 cœurs) ?", r: '1/4' }
+  ];
+  const k = pick(cases);
+  const toLx = f => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; };
+  const pool = ['4/5','1/2','5/8','1/4','1/3','3/5','2/3'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLx(k.r)}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${toLx(d)}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'probas', title: 'Probabilité simple (équiprobabilité)',
+    body: k.q,
+    type: 'qcm', choices, correctIdx,
+    solution: `Probabilité = (cas favorables) / (cas possibles).`,
+    help: {
+      cours: "Équiprobabilité : \\(P(A) = \\dfrac{\\text{cas favorables}}{\\text{cas possibles}}\\).",
+      savoirFaire: "Compter toutes les issues, puis celles qui conviennent, diviser.",
+      erreurs: ["Inverser favorables et possibles.", "Oublier de simplifier.", "Oublier des issues."]
+    }
+  };
+}
+
+
+/* ------------------------------------------------------------------
+   THÈME 11 — ALGORITHMIQUE (Scratch niveaux 1 et 2)
+   ------------------------------------------------------------------ */
+
+function t11_scratch_boucle() {
+  return {
+    theme: 'algo', title: 'Boucle « répéter … fois »',
+    body: `Avec une boucle "répéter 4 fois" contenant "avancer de 50 ; tourner de 90°", quelle figure est tracée ?`,
+    type: 'qcm',
+    choices: [
+      "Un carré de côté 50.",
+      "Un triangle équilatéral.",
+      "Un rectangle 50 × 100.",
+      "Un cercle."
+    ],
+    correctIdx: 0,
+    solution: "4 répétitions de (avancer + tourner 90°) tracent un carré.",
+    help: {
+      cours: "Pour tracer un polygone régulier : répéter \\(n\\) fois (avancer + tourner \\(\\dfrac{360°}{n}\\)).",
+      savoirFaire: "Nb côtés × angle = 360°.",
+      erreurs: ["Confondre nb côtés et angle.", "Oublier de tourner.", "Se tromper d'angle."]
+    }
+  };
+}
+
+function t11_scratch_angle_polygone() {
+  const cases = [
+    { n: 3, r: 120 }, { n: 4, r: 90 },
+    { n: 5, r: 72 }, { n: 6, r: 60 }, { n: 8, r: 45 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'algo', title: 'Polygone régulier — angle',
+    body: `Pour tracer un polygone régulier à ${k.n} côtés, quel angle faut-il tourner à chaque étape (en °) ?`,
+    type: 'input', expected: String(k.r), suffix: '°',
+    solution: `Angle = \\(\\dfrac{360}{${k.n}} = ${k.r}°\\).`,
+    help: {
+      cours: "Angle extérieur d'un polygone régulier à n côtés = 360°/n.",
+      savoirFaire: "Toujours diviser 360° par le nombre de côtés.",
+      erreurs: ["Prendre l'angle intérieur.", "Multiplier au lieu de diviser.", "Confondre avec la somme des angles."]
+    }
+  };
+}
+
+function t11_scratch_condition() {
+  return {
+    theme: 'algo', title: 'Instruction conditionnelle « si … alors »',
+    body: 'Dans un script, on a : « Mettre n à 8 ; si n > 5 alors dire « Grand » ; sinon dire « Petit » ». Que dit le lutin ?',
+    type: 'qcm',
+    choices: [
+      "Grand",
+      "Petit",
+      "Rien",
+      "Les deux à la fois"
+    ],
+    correctIdx: 0,
+    solution: "n = 8 et 8 > 5, donc on exécute la branche « alors » : le lutin dit <b>Grand</b>.",
+    help: {
+      cours: "<b>Si … alors … sinon</b> : exécute la première branche si la condition est vraie, la seconde sinon.",
+      savoirFaire: "1) Lire la valeur. 2) Tester la condition. 3) Suivre la bonne branche.",
+      erreurs: ["Exécuter les deux branches.", "Confondre > et ≥.", "Oublier le sinon."]
+    }
+  };
+}
+
+function t11_scratch_variable() {
+  return {
+    theme: 'algo', title: 'Variable dans un script',
+    body: "Dans un script : « Mettre x à 0 ; répéter 5 fois : ajouter 3 à x ». Quelle est la valeur finale de x ?",
+    type: 'input', expected: '15',
+    solution: "On part de 0, on ajoute 3 cinq fois : \\(0 + 5 \\times 3 = 15\\).",
+    help: {
+      cours: "Une <b>variable</b> conserve une valeur qui peut être modifiée par le programme.",
+      savoirFaire: "Dérouler la boucle : valeur initiale + nb répétitions × pas.",
+      erreurs: ["Oublier la valeur initiale.", "Compter un passage de trop.", "Confondre « mettre à » et « ajouter à »."]
+    }
+  };
+}
+
+function t11_scratch_evenement() {
+  return {
+    theme: 'algo', title: 'Événement « quand drapeau cliqué »',
+    body: "Dans Scratch, quand un script démarre-t-il avec le bloc « quand drapeau vert cliqué » ?",
+    type: 'qcm',
+    choices: [
+      "Quand l'utilisateur clique sur le drapeau vert.",
+      "Au démarrage de l'ordinateur.",
+      "Quand on appuie sur espace.",
+      "En continu."
+    ],
+    correctIdx: 0,
+    solution: "Ce bloc déclenche le script uniquement au clic sur le drapeau vert.",
+    help: {
+      cours: "Les blocs « événement » déclenchent un script quand un événement se produit (clic, touche, lutin touché…).",
+      savoirFaire: "Repérer le bloc « chapeau » en haut de la pile d'instructions.",
+      erreurs: ["Penser qu'un script démarre tout seul.", "Confondre les événements.", "Oublier qu'il peut y avoir plusieurs scripts."]
+    }
+  };
+}
+
+/* ==========================================================================
+   EXPORT : QUESTION_BANK + THEME_META
+   ========================================================================== */
+const QUESTION_BANK = {
+  calcul: [
+    t1_relatifs_produit, t1_relatifs_quotient, t1_signe_produit,
+    t1_somme_fractions, t1_produit_fractions, t1_quotient_fractions, t1_inverse,
+    t1_puissance_10, t1_notation_sci, t1_prefixes,
+    t1_carre_parfait, t1_racine_parfaite, t1_encadrement_racine,
+    t1_comp_fractions
+  ],
+  arithmetique: [
+    t2_premier, t2_decomposition, t2_frac_egales, t2_simplifier, t2_probleme_divisibilite
+  ],
+  algebre: [
+    t3_developper_simple, t3_reduire, t3_factoriser_simple,
+    t3_tester_solution, t3_equation_simple, t3_equation_ax_cx,
+    t3_equivalence_programmes
+  ],
+  pourcent: [
+    t4_pourcent_simple, t4_quatrieme_prop, t4_reconnaitre_proportionnalite, t4_vitesse_temps
+  ],
+  fonctions: [
+    t5_lecture_graphique, t5_formule_dependance, t5_image_simple
+  ],
+  geometrie: [
+    t6_pythagore_hyp, t6_pythagore_cote, t6_pythagore_reciproque,
+    t6_cosinus, t6_thales_direct, t6_thales_reciproque, t6_cas_egalite
+  ],
+  transformations: [
+    t6_translation_conservation, t6_homothetie_rapport
+  ],
+  espace: [
+    t7_volume_pyramide, t7_volume_cone, t7_repere_pave
+  ],
+  mesures: [
+    t8_conv_vitesse, t8_conv_debit, t8_grandeur_composee
+  ],
+  stats: [
+    t9_mediane, t9_etendue, t9_frequence, t9_diagramme_circulaire
+  ],
+  probas: [
+    t10_vocabulaire_proba, t10_proba_contraire, t10_proba_simple
+  ],
+  algo: [
+    t11_scratch_boucle, t11_scratch_angle_polygone, t11_scratch_condition,
+    t11_scratch_variable, t11_scratch_evenement
+  ]
+};
+
+const THEME_META = {
+  calcul:          { label: 'Calcul numérique', short: 'Calcul', icon: '½', color: '#0284c7' },
+  arithmetique:    { label: 'Arithmétique (premiers, divisibilité)', short: 'Arithmétique', icon: '÷', color: '#a855f7' },
+  algebre:         { label: 'Calcul littéral & équations', short: 'Algèbre', icon: 'x', color: '#0ea5e9' },
+  pourcent:        { label: 'Proportionnalité & pourcentages', short: 'Proportions', icon: '%', color: '#f97316' },
+  fonctions:       { label: 'Fonctions (dépendance)', short: 'Fonctions', icon: 'ƒ', color: '#ec4899' },
+  geometrie:       { label: 'Géométrie plane (Pythagore, Thalès, cos)', short: 'Géométrie', icon: '△', color: '#14b8a6' },
+  transformations: { label: 'Transformations (translation, homothétie)', short: 'Transfos', icon: '↻', color: '#ef4444' },
+  espace:          { label: 'Espace (pyramide, cône, repérage)', short: 'Espace', icon: '▣', color: '#8b5cf6' },
+  mesures:         { label: 'Grandeurs composées', short: 'Mesures', icon: 'V', color: '#22c55e' },
+  stats:           { label: 'Statistiques', short: 'Stats', icon: 'x̄', color: '#eab308' },
+  probas:          { label: 'Probabilités', short: 'Probas', icon: 'P', color: '#a855f7' },
+  algo:            { label: 'Algorithmique (Scratch)', short: 'Algo', icon: '▶', color: '#f59e0b' }
+};
+
+/* Construction d'une série (format identique au site 3ème, 9 questions max) */
+function buildSeries(selectedThemes) {
+  const themes = selectedThemes.length ? selectedThemes : Object.keys(QUESTION_BANK);
+  const total = 9;
+  const byTheme = {};
+  themes.forEach(t => { byTheme[t] = shuffle((QUESTION_BANK[t] || []).slice()); });
+  const used = new Set();
+  const selected = [];
+  let keepGoing = true;
+  while (selected.length < total && keepGoing) {
+    keepGoing = false;
+    for (const t of themes) {
+      if (selected.length >= total) break;
+      while (byTheme[t].length > 0) {
+        const gen = byTheme[t].shift();
+        if (!used.has(gen)) {
+          used.add(gen);
+          selected.push(gen);
+          keepGoing = true;
+          break;
+        }
+      }
+    }
+  }
+  return shuffle(selected.map(g => g()));
+}

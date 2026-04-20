@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0284c7" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Auto 4ème" />
+<meta name="description" content="Entraînement aux automatismes de 4ème (cycle 4). Fonctionne hors-ligne." />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>Automatismes — 4ème</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)'], ['$', '$']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body data-level="4eme">
+
+<header>
+  <h1>Automatismes — 4<sup>ème</sup><span class="header-subtitle"> · Préparation cycle 4</span></h1>
+  <div id="header-info">
+    <span id="student-badge"></span>
+    <button class="icon-btn" id="btn-a11y" title="Personnaliser l'affichage (taille du texte, police, confort de lecture)" aria-label="Personnaliser l'affichage">Aa</button>
+    <button class="icon-btn" id="btn-theme" title="Basculer mode clair / sombre" aria-label="Mode sombre">🌙</button>
+  </div>
+</header>
+
+<!-- Modale Accessibilité -->
+<div id="a11y-modal" class="a11y-modal" hidden>
+  <div class="a11y-modal-content">
+    <div class="a11y-modal-head">
+      <h2>✨ Personnaliser l'affichage</h2>
+      <button class="icon-btn" id="btn-a11y-close" aria-label="Fermer">✕</button>
+    </div>
+    <p class="note" style="margin-top:-4px;">Adapte le site à <strong>tes besoins et ton confort</strong> : taille du texte, police, lecture à voix haute, etc. Tous ces réglages sont <strong>cumulables</strong> et sauvegardés sur ton appareil.</p>
+
+    <div class="a11y-section">
+      <h3>📖 Lecture & typographie</h3>
+      <label class="a11y-switch">
+        <input type="checkbox" id="a11y-font-lexend" />
+        <span><strong>Police Lexend</strong> — police conçue pour une lecture plus confortable</span>
+      </label>
+      <label class="a11y-row">
+        <span>Taille du texte</span>
+        <select id="a11y-size">
+          <option value="normal" selected>Normale</option>
+          <option value="large">Grande (+15 %)</option>
+          <option value="xlarge">Très grande (+30 %)</option>
+        </select>
+      </label>
+      <label class="a11y-switch">
+        <input type="checkbox" id="a11y-spacing" />
+        <span><strong>Interligne aéré</strong> — plus d'espace entre les lignes</span>
+      </label>
+      <label class="a11y-switch">
+        <input type="checkbox" id="a11y-bg-cream" />
+        <span><strong>Fond crème</strong> — plus doux pour les yeux en lecture longue</span>
+      </label>
+    </div>
+
+    <div class="a11y-section">
+      <h3>🎯 Concentration</h3>
+      <label class="a11y-switch">
+        <input type="checkbox" id="a11y-hide-timer" />
+        <span><strong>Masquer le chronomètre</strong> pendant la séance</span>
+      </label>
+      <label class="a11y-switch">
+        <input type="checkbox" id="a11y-reduce-motion" />
+        <span><strong>Réduire les animations</strong> — moins de transitions</span>
+      </label>
+    </div>
+
+    <div class="a11y-section">
+      <h3>🔊 Lecture à voix haute</h3>
+      <label class="a11y-switch">
+        <input type="checkbox" id="a11y-speak" />
+        <span>Afficher le bouton <strong>🔊 Lire la question</strong> sur chaque question</span>
+      </label>
+      <p class="note" style="margin:4px 0 0 0;font-size:0.8rem;">Utilise la synthèse vocale de ton appareil. Les formules mathématiques sont lues en français simple.</p>
+    </div>
+
+    <div class="a11y-actions">
+      <button class="ghost" id="btn-a11y-reset">Tout réinitialiser</button>
+      <button class="primary" id="btn-a11y-apply">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<main id="app">
+
+  <!-- ÉCRAN ACCUEIL -->
+  <section id="screen-home" class="screen active">
+    <div class="menu-tabs">
+      <button class="tab-btn active" data-target="tab-train">💪 S'entraîner</button>
+      <button class="tab-btn" data-target="tab-eval">📝 S'évaluer</button>
+      <button class="tab-btn" data-target="tab-parcours">🎯 Mon programme</button>
+      <button class="tab-btn" data-target="tab-duel">⚔ Duel</button>
+      <button class="tab-btn" data-target="tab-revision">📚 Fiches & outils</button>
+    </div>
+
+    <!-- Onglet : entraînement libre -->
+    <div id="tab-train" class="tab-panel active">
+      <h2>💪 S'entraîner</h2>
+      <p class="lead">Choisis tes thèmes, ton nombre de questions et entraîne-toi à ton rythme. <strong>Aide, cours et signalement disponibles</strong> pendant la séance.</p>
+
+      <div class="card" style="background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(16,185,129,0.06) 100%); border-left: 4px solid var(--ok);">
+        <p style="margin:0;font-size:0.95rem;">
+          ✅ <strong>Mode libre</strong> : aide + cours disponibles, tu peux t'arrêter quand tu veux.<br>
+          🎯 <strong>Tu choisis</strong> : les thèmes, le nombre de questions, la durée.<br>
+          📊 <strong>À la fin</strong> : corrigé détaillé (pas de note — c'est de l'entraînement).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Thèmes (coche au moins un)</h3>
+        <div id="themes-list" class="themes-grid"></div>
+        <div class="themes-actions">
+          <button type="button" class="ghost small" id="btn-all-themes">Tout cocher</button>
+          <button type="button" class="ghost small" id="btn-no-themes">Tout décocher</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Nombre de questions</h3>
+        <label class="check"><input type="radio" name="train-nbq" value="5" /> 5 questions (court)</label>
+        <label class="check"><input type="radio" name="train-nbq" value="7" checked /> 7 questions</label>
+        <label class="check"><input type="radio" name="train-nbq" value="9" /> 9 questions</label>
+        <label class="check"><input type="radio" name="train-nbq" value="12" /> 12 questions (long)</label>
+      </div>
+
+      <div class="card">
+        <h3>Durée</h3>
+        <label class="check"><input type="radio" name="train-duree" value="0" checked /> Libre (pas de timer)</label>
+        <label class="check"><input type="radio" name="train-duree" value="900" /> 15 min</label>
+        <label class="check"><input type="radio" name="train-duree" value="1200" /> 20 min</label>
+      </div>
+
+      <button id="btn-start-train" class="primary big-btn">▶ Commencer l'entraînement</button>
+    </div>
+
+    <!-- Onglet : évaluation -->
+    <div id="tab-eval" class="tab-panel">
+      <h2>📝 S'évaluer</h2>
+      <p class="lead">9 questions tirées de tous les thèmes · 20 min chrono · sans calculatrice. Pour t'habituer au format du Brevet dès la 4ème.</p>
+
+      <div class="card" style="background: linear-gradient(135deg, var(--accent-soft) 0%, rgba(14,165,233,0.06) 100%); border-left: 4px solid var(--accent);">
+        <p style="margin:0;font-size:0.95rem;">
+          ⏱ <strong>Conditions réelles</strong> : timer obligatoire, tous les thèmes mélangés.<br>
+          🚫 <strong>Pendant l'épreuve</strong> : aide, signalement et cours désactivés.<br>
+          📊 <strong>À la fin</strong> : corrigé détaillé question par question + pourcentage de réussite.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Durée</h3>
+        <label class="check"><input type="radio" name="duree" value="1200" checked /> <strong>20 min</strong> — pour s'habituer au format Brevet</label>
+        <label class="check"><input type="radio" name="duree" value="1600" /> ⏱ <strong>26 min 40 s — tiers-temps</strong> (aménagement officiel PAP/PPS)</label>
+        <p class="note" style="margin:8px 0 0 0;font-size:0.85rem;">Le <strong>tiers-temps</strong> est l'aménagement officiel pour les élèves ayant un PAP, un PPS ou une notification MDPH.<br><strong>Le chronomètre est obligatoire et visible</strong> pendant toute l'évaluation.</p>
+      </div>
+
+      <button id="btn-start" class="primary big-btn">▶ Commencer l'évaluation</button>
+      <p class="note">Calculatrice <em>non autorisée</em>. Valeurs tirées au hasard, toujours calculables mentalement ou posées simplement. Pour t'entraîner librement (avec aide + choix des thèmes), utilise plutôt <strong>💪 S'entraîner</strong>.</p>
+    </div>
+
+    <!-- Onglet : mon programme -->
+    <div id="tab-parcours" class="tab-panel">
+      <h2>🎯 Mon programme</h2>
+      <p class="lead">Ton programme personnel avec <strong>répétition espacée</strong> : ce que tu maîtrises revient moins souvent, ce qui te pose problème revient plus souvent. Tu retiens mieux et plus longtemps. <strong>Max 3 séances / jour</strong> pour laisser le cerveau assimiler.</p>
+      <div id="parcours-content"></div>
+    </div>
+
+    <!-- Onglet : duel -->
+    <div id="tab-duel" class="tab-panel">
+      <h2>⚔ Duel à deux</h2>
+      <p class="lead">Défi joueur contre joueur sur le même appareil, chacun son tour. Gagne des XP, débloque des badges, grimpe dans le classement.</p>
+
+      <div class="card duel-setup-card">
+        <h3>Les joueurs</h3>
+        <div class="duel-players-setup">
+          <div class="duel-player-input">
+            <label>Joueur 1</label>
+            <input type="text" id="duel-p1" placeholder="Prénom" maxlength="15" autocomplete="off" />
+            <div class="duel-avatar" id="duel-avatar-1">?</div>
+          </div>
+          <span class="vs-badge">VS</span>
+          <div class="duel-player-input">
+            <label>Joueur 2</label>
+            <input type="text" id="duel-p2" placeholder="Prénom" maxlength="15" autocomplete="off" />
+            <div class="duel-avatar" id="duel-avatar-2">?</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Configuration du duel</h3>
+        <div class="duel-config">
+          <label>
+            <span>Mode des thèmes</span>
+            <select id="duel-theme-mode">
+              <option value="random" selected>🎲 Aléatoire — tous les thèmes mélangés</option>
+              <option value="strategic">🎯 Stratégique — chaque joueur choisit 2 thèmes</option>
+              <option value="homeaway">🏟 Aller-retour — chacun choisit 1-2 thèmes à domicile</option>
+            </select>
+          </label>
+          <label id="duel-theme-row">
+            <span>Thème (si aléatoire)</span>
+            <select id="duel-theme"></select>
+          </label>
+          <label>
+            <span>Nombre de questions</span>
+            <select id="duel-nbq">
+              <option value="5">5 questions</option>
+              <option value="7" selected>7 questions</option>
+              <option value="10">10 questions</option>
+            </select>
+          </label>
+          <label>
+            <span>Mode</span>
+            <select id="duel-mode">
+              <option value="normal" selected>Normal (sans timer)</option>
+              <option value="fast">⚡ Rapide (15 s / question)</option>
+            </select>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="duel-mobile" />
+            <span>📱 <strong>Mode mobile</strong> — QCM courts uniquement</span>
+          </label>
+          <label>
+            <span>Mini-jeu stratégique (bonne réponse = coup joué)</span>
+            <select id="duel-minigame">
+              <option value="none" selected>Aucun — score classique au cumul</option>
+              <option value="connect4">🔴 Puissance 4 — aligne 4 pions pour gagner</option>
+              <option value="race">🏇 Course de pions — premier arrivé à la case 12</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="card" id="duel-strategic-themes" style="display:none;">
+        <h3 id="strat-title">🎯 Choix des thèmes</h3>
+        <p class="note" id="strat-desc" style="margin-top:-4px;">Chaque joueur choisit ses 2 thèmes.</p>
+        <div class="duel-strategic-grid">
+          <div class="duel-strategic-col" data-player="1">
+            <h4 id="strat-label-1">Joueur 1</h4>
+            <div class="strat-themes-list" id="strat-themes-1"></div>
+            <div class="strat-count" id="strat-count-1">0 / 2 thèmes choisis</div>
+          </div>
+          <div class="duel-strategic-col" data-player="2">
+            <h4 id="strat-label-2">Joueur 2</h4>
+            <div class="strat-themes-list" id="strat-themes-2"></div>
+            <div class="strat-count" id="strat-count-2">0 / 2 thèmes choisis</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-start-duel" class="primary big-btn">⚔ Lancer le duel</button>
+
+      <h3 class="duel-section-title">🏆 Classement local</h3>
+      <div id="duel-ranking"></div>
+
+      <h3 class="duel-section-title">🎖 Profils joueurs</h3>
+      <div id="duel-profiles"></div>
+    </div>
+
+    <!-- Onglet : fiches de révision -->
+    <div id="tab-revision" class="tab-panel">
+      <h2>Fiches de révision</h2>
+      <p class="lead">Cours, savoir-faire et erreurs à éviter, classés par compétence. Aucune évaluation ici — à consulter librement.</p>
+      <div id="revision-content"></div>
+    </div>
+  </section>
+
+  <!-- ÉCRAN TEST -->
+  <section id="screen-test" class="screen">
+    <div class="test-header">
+      <div id="timer" class="timer">20:00</div>
+      <div id="progress" class="progress">Question 1/12</div>
+      <button id="btn-finish" class="ghost">Valider</button>
+    </div>
+
+    <div id="question-container"></div>
+
+    <nav class="test-nav">
+      <button id="btn-prev" class="ghost">← Précédent</button>
+      <div id="qdots"></div>
+      <button id="btn-next" class="ghost">Suivant →</button>
+    </nav>
+  </section>
+
+  <!-- ÉCRAN DUEL -->
+  <section id="screen-duel" class="screen">
+    <div class="duel-header">
+      <button id="btn-quit-duel" class="ghost small">← Quitter</button>
+      <div class="duel-question-progress">
+        <span id="duel-qnum">Question 1/7</span>
+        <div class="duel-pbar"><div id="duel-pbar-fill" class="duel-pbar-fill"></div></div>
+      </div>
+      <div id="duel-timer" class="duel-timer" style="display:none;">15</div>
+    </div>
+
+    <div class="duel-scoreboard">
+      <div class="duel-player-card" id="duel-p1-card">
+        <div class="duel-avatar-mini" id="duel-mini-1"></div>
+        <div class="duel-pc-body">
+          <div class="duel-pc-name" id="duel-pc-name-1">—</div>
+          <div class="duel-pc-score" id="duel-pc-score-1">0</div>
+        </div>
+      </div>
+      <div class="duel-vs-mini">VS</div>
+      <div class="duel-player-card" id="duel-p2-card">
+        <div class="duel-avatar-mini" id="duel-mini-2"></div>
+        <div class="duel-pc-body">
+          <div class="duel-pc-name" id="duel-pc-name-2">—</div>
+          <div class="duel-pc-score" id="duel-pc-score-2">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="duel-turn-banner" class="duel-turn-banner"></div>
+
+    <div id="duel-question-container" class="duel-question-container"></div>
+  </section>
+
+  <!-- ÉCRAN RÉSULTATS DUEL -->
+  <section id="screen-duel-results" class="screen">
+    <div id="duel-results-content"></div>
+  </section>
+
+  <!-- ÉCRAN RÉSULTATS -->
+  <section id="screen-results" class="screen">
+    <h2>Résultats</h2>
+    <div id="score-box"></div>
+    <div id="results-list"></div>
+    <div class="actions">
+      <button id="btn-retry-wrong" class="primary">S'entraîner sur les erreurs</button>
+      <button id="btn-new-test" class="ghost">Nouvelle série (valeurs différentes)</button>
+      <button id="btn-home" class="ghost">Accueil</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <small>Automatismes 4ème — préparation aux attendus du cycle 4.</small>
+</footer>
+
+<script src="questions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
