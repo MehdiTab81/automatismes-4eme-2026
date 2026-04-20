@@ -1268,6 +1268,13 @@ function finishTest() {
   setTimeout(() => { try { maybeRemindExport(); } catch(e){} }, 800);
   const score = state.answers.reduce((s, a, i) =>
     s + (isAnswerCorrect(state.series[i], a) ? 1 : 0), 0);
+  // Avancement des parcours thématiques "Révision ciblée"
+  if (state._focusParcoursId) {
+    const correctCount = state.answers.reduce((s, a, i) => s + (isAnswerCorrect(state.series[i], a) ? 1 : 0), 0);
+    const newStep = (state._focusParcoursStartStep || 0) + correctCount;
+    setFocusStep(state._focusParcoursId, newStep);
+    renderFocusProgress(state._focusParcoursId);
+  }
   const withHelp = state.answers.filter(a => a.helped).length;
 
   const pct = Math.round(score / state.series.length * 100);
@@ -3122,6 +3129,125 @@ function miniGameCheckWinAndMaybeEnd(onContinue) {
   onContinue();
 }
 
+/* ==========================================================================
+   Parcours thématiques — "Révision ciblée"
+   Chaque parcours est une suite ordonnée de générateurs ciblant une évaluation.
+   Avancement mémorisé en localStorage.
+   ========================================================================== */
+const FOCUS_PROGRESS_KEY = 'auto4e.focus.progress';
+const FOCUS_PARCOURS = {
+  'calcul-litteral': {
+    label: 'Calcul littéral & équations',
+    color: '#0ea5e9',
+    generators: [
+      't3e_reduire_somme', 't3e_reduire_produit', 't3e_simplifier_produit_lettres',
+      't3_developper_simple', 't3e_developper_negatif',
+      't3e_develop_plusieurs_par', 't3e_double_distrib', 't3e_developper_complexe',
+      't3e_identifier_facteur_commun', 't3e_factoriser_puissance',
+      't3e_structure_expression', 't3e_verifier_egalite',
+      't3e_valeur_expression', 't3e_tester_x2',
+      't3e_equation_facile', 't3e_equation_complexe', 't3e_equation_fraction',
+      't3e_equation_developpement',
+      't3e_probleme_nombre', 't3e_probleme_prix', 't3e_probleme_perimetre'
+    ]
+  },
+  'puissances': {
+    label: 'Puissances & écriture scientifique',
+    color: '#f97316',
+    generators: [
+      't1p_ecrire_puissance', 't1p_exposant_0_1', 't1p_puissance_relatif',
+      't1p_produit_meme_base', 't1p_quotient_meme_base',
+      't1p_puissance_10_produit', 't1p_puissance_10_quotient',
+      't1p_priorites_puissances', 't1p_calcul_complexe',
+      't1p_ecriture_sci_basic', 't1p_trouver_n',
+      't1p_programme_calcul', 't1p_produit_puissance_n',
+      't1p_factoriser_puissances', 't1p_doublement'
+    ]
+  }
+};
+
+function loadFocusProgress() {
+  try { return JSON.parse(localStorage.getItem(FOCUS_PROGRESS_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveFocusProgress(p) { localStorage.setItem(FOCUS_PROGRESS_KEY, JSON.stringify(p)); }
+function getFocusStep(id) {
+  const p = loadFocusProgress();
+  return p[id] || 0;
+}
+function setFocusStep(id, step) {
+  const p = loadFocusProgress();
+  p[id] = step;
+  saveFocusProgress(p);
+}
+
+function renderFocusProgress(id) {
+  const el = document.getElementById(`focus-prog-${id}`);
+  if (!el) return;
+  const parcours = FOCUS_PARCOURS[id];
+  if (!parcours) return;
+  const total = parcours.generators.length;
+  const step = Math.min(getFocusStep(id), total);
+  const pct = total > 0 ? Math.round(100 * step / total) : 0;
+  el.innerHTML = `
+    <div class="focus-bar-row">
+      <div class="focus-bar"><div class="focus-bar-fill" style="width:${pct}%;background:${parcours.color};"></div></div>
+      <span class="focus-bar-text">${step} / ${total}</span>
+    </div>`;
+}
+
+function startFocusParcours(id) {
+  const parcours = FOCUS_PARCOURS[id];
+  if (!parcours) return;
+  const total = parcours.generators.length;
+  let step = getFocusStep(id);
+  if (step >= total) {
+    if (!confirm(`Parcours déjà terminé (${step}/${total}). Recommencer depuis le début ?`)) return;
+    step = 0;
+    setFocusStep(id, 0);
+  }
+  // Prendre les 5 prochaines compétences (ou moins si fin)
+  const slice = parcours.generators.slice(step, step + 5);
+  const series = slice.map(name => {
+    const gen = Object.values(QUESTION_BANK).flat().find(g => g.name === name);
+    return gen ? gen() : null;
+  }).filter(Boolean);
+  if (series.length === 0) {
+    alert('Aucune question disponible dans ce parcours.');
+    return;
+  }
+  state.mode = 'train';
+  state.duree = 0;
+  state.series = series;
+  state.answers = series.map(() => ({ selectedIdx: null, inputAnswer: '', helped: false }));
+  state.current = 0;
+  state.startedAt = Date.now();
+  state.remaining = 0;
+  state._focusParcoursId = id;
+  state._focusParcoursStartStep = step;
+  startTimer();
+  showScreen('screen-test');
+  renderQuestion();
+}
+
+function initFocus() {
+  document.querySelectorAll('.focus-start').forEach(btn => {
+    btn.addEventListener('click', () => startFocusParcours(btn.dataset.parcours));
+  });
+  document.querySelectorAll('.focus-reset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('Réinitialiser la progression de ce parcours ?')) {
+        setFocusStep(btn.dataset.parcours, 0);
+        renderFocusProgress(btn.dataset.parcours);
+      }
+    });
+  });
+  Object.keys(FOCUS_PARCOURS).forEach(renderFocusProgress);
+  // Quand on ouvre l'onglet, on met à jour la progression (au cas où)
+  document.querySelectorAll('[data-target="tab-focus"]').forEach(t => {
+    t.addEventListener('click', () => setTimeout(() => Object.keys(FOCUS_PARCOURS).forEach(renderFocusProgress), 50));
+  });
+}
+
 /* ---------- Init ---------- */
 initDarkMode();
 initA11y();
@@ -3129,6 +3255,7 @@ initTabs();
 initThemes();
 initKeyboard();
 initDuel();
+initFocus();
 refreshStudentBadge();
 
 /* Service Worker — permet l'installation en PWA et le fonctionnement hors-ligne.

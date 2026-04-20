@@ -1006,6 +1006,63 @@ body[data-theme="dark"] .a11y-row select {
   .export-reminder span { text-align: center; }
 }
 
+/* Onglet "Révision ciblée" — parcours thématiques */
+.focus-parcours {
+  background: var(--bg-elev);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+}
+.focus-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.focus-badge {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.focus-head h3 { margin: 0 0 2px 0; font-size: 1.05rem; }
+.focus-head .note { margin: 0; font-size: 0.85rem; }
+.focus-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.focus-bar {
+  flex: 1;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.focus-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 300ms ease-out;
+}
+.focus-bar-text {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--muted);
+  min-width: 50px;
+  text-align: right;
+}
+.focus-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
 /* Histogramme SVG */
 .histogram-container {
   margin: 12px auto;

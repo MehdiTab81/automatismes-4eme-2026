@@ -102,8 +102,9 @@
   <section id="screen-home" class="screen active">
     <div class="menu-tabs">
       <button class="tab-btn active" data-target="tab-train">💪 S'entraîner</button>
+      <button class="tab-btn" data-target="tab-focus">🎯 Révision ciblée</button>
       <button class="tab-btn" data-target="tab-eval">📝 S'évaluer</button>
-      <button class="tab-btn" data-target="tab-parcours">🎯 Mon programme</button>
+      <button class="tab-btn" data-target="tab-parcours">🗓 Mon programme</button>
       <button class="tab-btn" data-target="tab-duel">⚔ Duel</button>
       <button class="tab-btn" data-target="tab-revision">📚 Fiches & outils</button>
     </div>
@@ -146,6 +147,44 @@
       </div>
 
       <button id="btn-start-train" class="primary big-btn">▶ Commencer l'entraînement</button>
+    </div>
+
+    <!-- Onglet : révision ciblée (parcours thématiques) -->
+    <div id="tab-focus" class="tab-panel">
+      <h2>🎯 Révision ciblée</h2>
+      <p class="lead">Des <strong>parcours courts et thématiques</strong> pour préparer une évaluation précise. Chaque parcours est une série de questions <em>dans un ordre pédagogique</em> : du plus simple au plus complexe.</p>
+
+      <div class="focus-parcours" data-id="calcul-litteral">
+        <div class="focus-head">
+          <span class="focus-badge" style="background:#0ea5e9;">📐</span>
+          <div>
+            <h3>Calcul littéral &amp; équations</h3>
+            <p class="note">20 questions · réduire, développer (simple et double), factoriser, tester, résoudre, mise en équation.</p>
+          </div>
+        </div>
+        <div class="focus-progression" id="focus-prog-calcul-litteral"></div>
+        <div class="focus-actions">
+          <button class="primary focus-start" data-parcours="calcul-litteral">▶ Démarrer ce parcours</button>
+          <button class="ghost small focus-reset" data-parcours="calcul-litteral">↺ Réinitialiser</button>
+        </div>
+      </div>
+
+      <div class="focus-parcours" data-id="puissances">
+        <div class="focus-head">
+          <span class="focus-badge" style="background:#f97316;">⚡</span>
+          <div>
+            <h3>Puissances, écriture scientifique &amp; priorités</h3>
+            <p class="note">15 questions · puissances de relatifs, règles de même base, priorités, écriture scientifique, programmes de calcul.</p>
+          </div>
+        </div>
+        <div class="focus-progression" id="focus-prog-puissances"></div>
+        <div class="focus-actions">
+          <button class="primary focus-start" data-parcours="puissances">▶ Démarrer ce parcours</button>
+          <button class="ghost small focus-reset" data-parcours="puissances">↺ Réinitialiser</button>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:12px;">💡 Chaque bonne réponse fait avancer ta progression. Les questions que tu rates reviennent plus souvent jusqu'à ce que tu les maîtrises.</p>
     </div>
 
     <!-- Onglet : évaluation -->

@@ -1565,13 +1565,928 @@ function t11_scratch_evenement() {
 /* ==========================================================================
    EXPORT : QUESTION_BANK + THEME_META
    ========================================================================== */
+
+/* ==========================================================================
+   BLOC ÉVALUATION CALCUL LITTÉRAL — 20 générateurs alignés sur le PDF
+   Spécifique : réduction signée, double distribution, factorisation avec x^n,
+   équations avec fractions, mise en équation, tests.
+   ========================================================================== */
+
+/* --- 1. Réduction signée (produits) --- */
+function t3e_reduire_produit() {
+  const cases = [
+    { expr: '-8a \\times (-10a)', r: '80a^2' },
+    { expr: '-3 \\times (-7y)', r: '21y' },
+    { expr: '-10x \\times 3x', r: '-30x^2' },
+    { expr: '5a \\times (-4a)', r: '-20a^2' },
+    { expr: '-2t \\times (-6)', r: '12t' },
+    { expr: '-4y \\times 2y', r: '-8y^2' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Réduire un produit (signes)',
+    body: `Réduire : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On applique la règle des signes puis on multiplie les parties littérales : \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "Produit : règle des signes (même signe → +, signes différents → −). \\(x \\times x = x^2\\).",
+      savoirFaire: "1) Calculer le signe. 2) Calculer le produit des nombres. 3) Regrouper les lettres.",
+      erreurs: ["Oublier le signe.", "Écrire \\(x + x\\) au lieu de \\(x^2\\).", "Se tromper sur le signe final."]
+    }
+  };
+}
+
+/* --- 2. Réduction signée (sommes de termes semblables) --- */
+function t3e_reduire_somme() {
+  const cases = [
+    { expr: '-7y^2 - 10y^2', r: '-17y^2' },
+    { expr: '-6y - 5y', r: '-11y' },
+    { expr: '-t^2 + 7t^2', r: '6t^2' },
+    { expr: '3x^2 - 8x^2', r: '-5x^2' },
+    { expr: '-5a + 12a', r: '7a' },
+    { expr: '-9b^2 - 3b^2', r: '-12b^2' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Réduire une somme (termes semblables)',
+    body: `Réduire : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On additionne les coefficients des termes semblables : \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "Termes semblables : même lettre et même exposant (ex. \\(3y^2\\) et \\(-5y^2\\) sont semblables).",
+      savoirFaire: "Ajouter les coefficients en gardant la partie littérale.",
+      erreurs: ["Ajouter des termes non semblables (\\(y\\) avec \\(y^2\\)).", "Oublier le signe.", "Modifier l'exposant."]
+    }
+  };
+}
+
+/* --- 3. Développer produit avec signe négatif externe --- */
+function t3e_developper_negatif() {
+  const cases = [
+    { expr: '-2(-4x + 7)', r: '8x - 14' },
+    { expr: '-3(2x - 5)', r: '-6x + 15' },
+    { expr: '-(3x + 4)', r: '-3x - 4' },
+    { expr: '-5(-a + 3)', r: '5a - 15' },
+    { expr: '-4(6 - 2y)', r: '-24 + 8y' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Développer avec signe négatif',
+    body: `Développer : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Attention aux signes : \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "Avec un signe négatif devant : tous les signes à l'intérieur sont <b>changés</b>.",
+      savoirFaire: "Distribuer le \\(-k\\) à chaque terme en respectant la règle des signes.",
+      erreurs: ["Oublier de changer le signe du 2e terme.", "Se tromper de signe.", "Ne pas distribuer complètement."]
+    }
+  };
+}
+
+/* --- 4. Double distributivité (essentielle pour l'éval) --- */
+function t3e_double_distrib() {
+  const cases = [
+    { a: 2, b: 4, c: 3, d: 3, dev: '6x^2 + 18x + 12' },     // (2x+4)(3x+3)
+    { a: 2, b: 3, c: 1, d: 4, dev: '2x^2 + 11x + 12' },     // (2x+3)(x+4)
+    { a: 1, b: 5, c: 2, d: -3, dev: '2x^2 + 7x - 15' },
+    { a: 3, b: -2, c: 1, d: 5, dev: '3x^2 + 13x - 10' },
+    { a: 2, b: 1, c: 3, d: -4, dev: '6x^2 - 5x - 4' }
+  ];
+  const k = pick(cases);
+  const fmt = n => (n > 0 ? '+ ' + n : '- ' + Math.abs(n));
+  const expr = `(${k.a === 1 ? '' : k.a}x ${fmt(k.b)})(${k.c === 1 ? '' : k.c}x ${fmt(k.d)})`;
+  const pool = cases.map(c => c.dev);
+  const distract = shuffle(pool.filter(x => x !== k.dev)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.dev}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Double distributivité',
+    body: `Développer et réduire : \\(${expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\((a+b)(c+d) = ac + ad + bc + bd\\). Puis on regroupe les termes en x.`,
+    help: {
+      cours: "<b>Double distributivité</b> : \\((a+b)(c+d) = ac + ad + bc + bd\\) — <b>4 produits</b> à faire.",
+      savoirFaire: "Faire 4 produits, puis réduire les termes en x.",
+      erreurs: ["Ne faire que 2 produits au lieu de 4.", "Oublier de réduire.", "Se tromper de signe."]
+    }
+  };
+}
+
+/* --- 5. Développer et réduire (plusieurs parenthèses) --- */
+function t3e_develop_plusieurs_par() {
+  const cases = [
+    { expr: '-(3x + 4) + (7x - 1) - 2(2x - 1)', r: '-3' },       // -3x-4+7x-1-4x+2 = 0x -3
+    { expr: '2(x + 3) - 3(x - 1)', r: '-x + 9' },
+    { expr: '5(2x - 1) - (3x + 2)', r: '7x - 7' },
+    { expr: '4(x - 2) + 3(2x + 1)', r: '10x - 5' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Développer plusieurs parenthèses',
+    body: `Développer et réduire : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On développe chaque parenthèse (attention aux signes) puis on regroupe.`,
+    help: {
+      cours: "Méthode : développer <b>chaque</b> parenthèse une par une, puis regrouper les termes semblables.",
+      savoirFaire: "1) Distribuer. 2) Regrouper les x. 3) Regrouper les constantes.",
+      erreurs: ["Oublier de changer les signes sous un − devant.", "Oublier un terme.", "Additionner des termes non semblables."]
+    }
+  };
+}
+
+/* --- 6. Factoriser avec x^n (facteur commun littéral) --- */
+function t3e_factoriser_puissance() {
+  const cases = [
+    { expr: 'x^2 - 3x', fact: 'x(x - 3)' },
+    { expr: '-9x + 12', fact: '-3(3x - 4)', alt: '3(-3x + 4)' },
+    { expr: '9x^3 - 6x^2 + 3x', fact: '3x(3x^2 - 2x + 1)' },
+    { expr: '4x^2 + 8x', fact: '4x(x + 2)' },
+    { expr: '5x^2 - 15x', fact: '5x(x - 3)' },
+    { expr: '6x^3 + 9x', fact: '3x(2x^2 + 3)' }
+  ];
+  const k = pick(cases);
+  const distract = shuffle(cases.filter(c => c.fact !== k.fact)).slice(0, 3).map(c => c.fact);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.fact}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Factoriser au maximum',
+    body: `Factoriser au maximum : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Identifier le plus grand facteur commun (nombre ET puissance de x).`,
+    help: {
+      cours: "Pour factoriser au maximum : chercher le PGCD des coefficients ET la plus petite puissance de x commune.",
+      savoirFaire: "Ex. \\(6x^3 - 9x^2 = 3x^2(2x - 3)\\) : le facteur commun est \\(3x^2\\).",
+      erreurs: ["Facteur trop petit (ne pas factoriser complètement).", "Oublier la puissance de x.", "Erreur de signe."]
+    }
+  };
+}
+
+/* --- 7. Tester une équation avec x^2 --- */
+function t3e_tester_x2() {
+  const cases = [
+    { eq: 'x^2 - 4x = 12', val: 3, vrai: false, calc: '3² − 4×3 = 9 − 12 = −3 ≠ 12' },
+    { eq: 'x^2 - 4x = 12', val: -2, vrai: true, calc: '(−2)² − 4×(−2) = 4 + 8 = 12 ✓' },
+    { eq: 'x^2 + 3x = 10', val: 2, vrai: true, calc: '2² + 3×2 = 4 + 6 = 10 ✓' },
+    { eq: 'x^2 - 5 = 4', val: 3, vrai: true, calc: '3² − 5 = 4 ✓' },
+    { eq: '2x^2 - 8 = 0', val: 2, vrai: true, calc: '2×4 − 8 = 0 ✓' }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: 'Oui', correct: k.vrai },
+    { html: 'Non', correct: !k.vrai }
+  ]);
+  return {
+    theme: 'algebre', title: 'Tester une équation avec x²',
+    body: `Est-ce que \\(x = ${k.val}\\) est solution de l'équation \\(${k.eq}\\) ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On remplace et on vérifie : ${k.calc}.`,
+    help: {
+      cours: "Tester : remplacer x par la valeur, calculer chaque membre, comparer.",
+      savoirFaire: "Bien utiliser les parenthèses autour des valeurs négatives pour \\(x^2\\).",
+      erreurs: ["Oublier les parenthèses : \\(-2^2 = -4\\) mais \\((-2)^2 = 4\\) !", "Erreur de calcul.", "Confondre = et ≠."]
+    }
+  };
+}
+
+/* --- 8. Équations avec fraction (x/3 + 4 = -5) --- */
+function t3e_equation_fraction() {
+  const cases = [
+    { eq: '\\dfrac{x}{3} + 4 = -5', sol: '-27' },    // x/3 = -9 → x = -27
+    { eq: '\\dfrac{x}{2} - 1 = 6', sol: '14' },
+    { eq: '\\dfrac{x}{5} + 3 = 7', sol: '20' },
+    { eq: '\\dfrac{x}{4} - 2 = -1', sol: '4' },
+    { eq: '\\dfrac{2x}{3} = 6', sol: '9' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'algebre', title: 'Équation avec fraction',
+    body: `Résoudre : \\(${k.eq}\\).`,
+    type: 'input', expected: k.sol,
+    solution: `On isole la fraction, puis on multiplie par le dénominateur.`,
+    help: {
+      cours: "Pour résoudre avec \\(\\dfrac{x}{n}\\) : isoler la fraction, puis multiplier les deux membres par \\(n\\).",
+      savoirFaire: "1) Soustraire la constante. 2) Multiplier les deux côtés par le dénominateur.",
+      erreurs: ["Oublier de multiplier les deux membres.", "Se tromper de signe.", "Diviser au lieu de multiplier."]
+    }
+  };
+}
+
+/* --- 9. Équation avec développement préalable --- */
+function t3e_equation_developpement() {
+  const cases = [
+    { eq: '2(3x - 4) - 5(2x + 1) = 0', sol: '-13/4', numeric: -3.25 },
+    { eq: '3(x - 2) = 2(x + 1)', sol: '8', numeric: 8 },
+    { eq: '4(x - 1) - 3(x + 2) = 0', sol: '10', numeric: 10 },
+    { eq: '5(2x - 3) = 3(x + 4)', sol: '27/7', numeric: 27/7 }
+  ];
+  const k = pick(cases);
+  const expected = Number.isInteger(k.numeric)
+    ? [String(k.numeric)]
+    : [k.sol, k.sol.replace('/', ' / '), k.numeric.toFixed(2).replace('.', ',')];
+  return {
+    theme: 'algebre', title: 'Équation avec développement',
+    body: `Résoudre : \\(${k.eq}\\).`,
+    type: 'input', expected,
+    solution: `Développer des deux côtés, regrouper, puis résoudre.`,
+    help: {
+      cours: "Méthode : 1) Développer chaque parenthèse. 2) Regrouper les x d'un côté, les constantes de l'autre. 3) Diviser.",
+      savoirFaire: "Toujours développer AVANT de regrouper.",
+      erreurs: ["Oublier de distribuer.", "Se tromper de signe lors du regroupement.", "Erreur dans la division finale."]
+    }
+  };
+}
+
+/* --- 10. Mise en équation — problème "pense à un nombre" --- */
+function t3e_probleme_nombre() {
+  const cases = [
+    {
+      q: "Jean pense à un nombre, le multiplie par −3 puis ajoute 12. Il obtient 4. Quel est ce nombre ?",
+      equation: "-3x + 12 = 4", sol: '8/3', numeric: 8/3
+    },
+    {
+      q: "Un nombre, multiplié par 5, puis augmenté de 3, donne 28. Quel est ce nombre ?",
+      equation: "5x + 3 = 28", sol: '5', numeric: 5
+    },
+    {
+      q: "Le double d'un nombre, diminué de 7, donne 11. Quel est ce nombre ?",
+      equation: "2x - 7 = 11", sol: '9', numeric: 9
+    },
+    {
+      q: "Le triple d'un nombre, augmenté de 4, donne le double du nombre, diminué de 1. Quel est ce nombre ?",
+      equation: "3x + 4 = 2x - 1", sol: '-5', numeric: -5
+    }
+  ];
+  const k = pick(cases);
+  const expected = Number.isInteger(k.numeric)
+    ? [String(k.numeric)]
+    : [k.sol, k.numeric.toFixed(2).replace('.', ',')];
+  return {
+    theme: 'algebre', title: 'Mise en équation — un nombre',
+    body: k.q,
+    type: 'input', expected,
+    solution: `On pose \\(x\\) = nombre cherché. Équation : \\(${k.equation}\\). Résolution : \\(x = ${k.sol}\\).`,
+    help: {
+      cours: "Méthode : 1) Choisir l'inconnue. 2) Traduire chaque étape. 3) Écrire l'équation. 4) Résoudre.",
+      savoirFaire: "Traduire les mots en opérations : \"multiplier par\" → ×, \"ajouter\" → +.",
+      erreurs: ["Mal traduire l'énoncé.", "Oublier une étape.", "Ne pas conclure (donner le nombre)."]
+    }
+  };
+}
+
+/* --- 11. Mise en équation — problème concret (classeurs, prix) --- */
+function t3e_probleme_prix() {
+  const cases = [
+    {
+      q: "Blandine achète 6 classeurs et 1 livre pour 27,60 €. Le livre coûte 12 €. Quel est le prix (en €) d'un classeur ?",
+      sol: '2,60', num: 2.6, equation: "6x + 12 = 27,60"
+    },
+    {
+      q: "5 stylos identiques et un cahier à 4 € coûtent au total 14 €. Quel est le prix (en €) d'un stylo ?",
+      sol: '2', num: 2, equation: "5x + 4 = 14"
+    },
+    {
+      q: "Marie a acheté 3 t-shirts identiques et un pantalon à 25 €. Le total fait 58 €. Quel est le prix (en €) d'un t-shirt ?",
+      sol: '11', num: 11, equation: "3x + 25 = 58"
+    }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'algebre', title: 'Mise en équation — prix',
+    body: k.q,
+    type: 'input', expected: [k.sol, k.sol.replace(',', '.')],
+    solution: `Soit \\(x\\) le prix cherché. Équation : \\(${k.equation}\\). D'où \\(x = ${k.sol}\\) €.`,
+    help: {
+      cours: "Pour une mise en équation : nommer l'inconnue, exprimer le total, résoudre.",
+      savoirFaire: "Vérifier avec la valeur trouvée que le total est bon.",
+      erreurs: ["Oublier une partie du total.", "Mal traduire.", "Ne pas finaliser (\"donc x = ...\")."]
+    }
+  };
+}
+
+/* --- 12. Expression somme ou produit ? --- */
+function t3e_structure_expression() {
+  const cases = [
+    { expr: '3x + 12', nature: 'somme', autre: '3(x + 4)' },
+    { expr: '3(x + 4)', nature: 'produit', autre: '3x + 12' },
+    { expr: '5(2x - 1)', nature: 'produit', autre: '10x - 5' },
+    { expr: '10x - 5', nature: 'somme (différence)', autre: '5(2x - 1)' },
+    { expr: '(x + 2)(x - 3)', nature: 'produit', autre: 'x^2 - x - 6' }
+  ];
+  const k = pick(cases);
+  const options = ['somme', 'produit', 'somme (différence)'];
+  const { choices, correctIdx } = makeQCM(options.map(o => ({
+    html: o.charAt(0).toUpperCase() + o.slice(1), correct: o === k.nature
+  })));
+  return {
+    theme: 'algebre', title: 'Nature d\'une expression',
+    body: `L'expression \\(${k.expr}\\) est-elle une somme ou un produit ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(${k.expr}\\) est un(e) <b>${k.nature}</b>.`,
+    help: {
+      cours: "Une <b>somme</b> se termine par +/− entre deux termes non regroupés. Un <b>produit</b> est une multiplication (parenthèses collées).",
+      savoirFaire: "Regarder la <b>dernière opération</b> qu'on ferait en calculant.",
+      erreurs: ["Confondre forme développée / factorisée.", "Ignorer les parenthèses.", "Se focaliser sur le 1er signe."]
+    }
+  };
+}
+
+/* --- 13. Distributivité + identification --- */
+function t3e_identifier_facteur_commun() {
+  const cases = [
+    { expr: '15x + 25', fc: '5' },
+    { expr: '8x^2 - 12x', fc: '4x' },
+    { expr: '6a + 9b', fc: '3' },
+    { expr: '10x^2 + 15x', fc: '5x' },
+    { expr: '24x^3 - 16x^2', fc: '8x^2' }
+  ];
+  const k = pick(cases);
+  const pool = ['5', '4x', '3', '5x', '8x^2', '2x', '6'];
+  const distract = shuffle(pool.filter(x => x !== k.fc)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.fc}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Identifier le facteur commun',
+    body: `Quel est le plus grand facteur commun de \\(${k.expr}\\) ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Le plus grand facteur commun est <b>\\(${k.fc}\\)</b>.`,
+    help: {
+      cours: "Le <b>plus grand facteur commun</b> = le plus grand nombre commun × la plus petite puissance de x commune.",
+      savoirFaire: "Décomposer chaque terme en facteurs pour voir les communs.",
+      erreurs: ["Choisir un facteur trop petit.", "Oublier la partie littérale.", "Ne pas prendre la plus petite puissance."]
+    }
+  };
+}
+
+/* --- 14. Équation produit nul (préfiguration, simple) --- */
+function t3e_equation_facile() {
+  const cases = [
+    { eq: 'x + 5 = 12', sol: '7' },
+    { eq: '5x - 2 = 8', sol: '2' },
+    { eq: '8x - 2 = 6x - 10', sol: '-4' },
+    { eq: '3x + 7 = 1', sol: '-2' },
+    { eq: '4x = -12', sol: '-3' },
+    { eq: 'x + 9 = 5', sol: '-4' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'algebre', title: 'Équation — premier degré',
+    body: `Résoudre : \\(${k.eq}\\).`,
+    type: 'input', expected: k.sol,
+    solution: `Isoler x : on obtient \\(x = ${k.sol}\\).`,
+    help: {
+      cours: "Résoudre : isoler x en faisant l'opération inverse de chaque côté.",
+      savoirFaire: "+ ↔ − ; × ↔ ÷.",
+      erreurs: ["Faire la même opération d'un seul côté.", "Se tromper de signe.", "Oublier de finaliser (\"x = ...\")."]
+    }
+  };
+}
+
+/* --- 15. Produit de deux écritures (a × a = a²) --- */
+function t3e_simplifier_produit_lettres() {
+  const cases = [
+    { expr: 'x \\times x', r: 'x^2' },
+    { expr: '3x \\times 4x', r: '12x^2' },
+    { expr: '2a \\times a \\times a', r: '2a^3' },
+    { expr: '5 \\times x \\times x \\times x', r: '5x^3' },
+    { expr: '-2y \\times 3y', r: '-6y^2' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'algebre', title: 'Simplifier un produit littéral',
+    body: `Simplifier : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "\\(x \\times x = x^2\\), \\(x \\times x \\times x = x^3\\)… On additionne les exposants d'une même lettre.",
+      savoirFaire: "Multiplier les nombres, puis compter les lettres identiques.",
+      erreurs: ["Écrire \\(2x\\) au lieu de \\(x^2\\).", "Oublier le signe.", "Multiplier les exposants au lieu de les ajouter."]
+    }
+  };
+}
+
+/* --- 16. Substitution (valeur d'expression) --- */
+function t3e_valeur_expression() {
+  const cases = [
+    { expr: '3x - 7', x: 2, r: -1 },
+    { expr: 'x^2 + 3', x: 4, r: 19 },
+    { expr: '2(x + 5)', x: 3, r: 16 },
+    { expr: '-x + 4', x: -2, r: 6 },
+    { expr: 'x^2 - 2x', x: 5, r: 15 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'algebre', title: 'Calculer une expression pour une valeur',
+    body: `Calculer \\(${k.expr}\\) pour \\(x = ${k.x}\\).`,
+    type: 'input', expected: String(k.r),
+    solution: `On remplace x par ${k.x} : \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "Substituer = remplacer la lettre par sa valeur, en respectant les priorités.",
+      savoirFaire: "Utiliser des parenthèses autour de la valeur surtout si elle est négative.",
+      erreurs: ["Oublier les parenthèses.", "Erreur de priorités.", "Oublier une opération."]
+    }
+  };
+}
+
+/* --- 17. Développer avec k(ax + b)(…) en 2 temps --- */
+function t3e_developper_complexe() {
+  const cases = [
+    { expr: '2(x + 3)(x - 1)', r: '2x^2 + 4x - 6' },
+    { expr: '3(2x - 1)(x + 2)', r: '6x^2 + 9x - 6' },
+    { expr: '-(x + 2)(x - 3)', r: '-x^2 + x + 6' }
+  ];
+  const k = pick(cases);
+  const distract = cases.filter(c => c.r !== k.r).map(c => c.r);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.slice(0, 3).map(d => ({ html: `\\(${d}\\)`, correct: false })),
+    { html: `\\(${k.r.replace('+', '-')}\\)`, correct: false }
+  ].slice(0, 4));
+  return {
+    theme: 'algebre', title: 'Développer un produit plus complexe',
+    body: `Développer et réduire : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Développer d'abord le produit de parenthèses, puis distribuer le coefficient extérieur.`,
+    help: {
+      cours: "Ordre : 1) Développer les parenthèses entre elles (double distrib). 2) Distribuer le coefficient.",
+      savoirFaire: "Faire étape par étape, ne pas sauter d'étape.",
+      erreurs: ["Sauter une étape.", "Erreur de signe.", "Oublier de réduire."]
+    }
+  };
+}
+
+/* --- 18. Vérifier un développement --- */
+function t3e_verifier_egalite() {
+  return {
+    theme: 'algebre', title: 'Vérifier une égalité',
+    body: "L'égalité \\(3(x + 2) = 3x + 6\\) est-elle vraie pour toutes les valeurs de x ?",
+    type: 'qcm',
+    choices: [
+      "Oui, c'est la distributivité.",
+      "Non, seulement pour certaines valeurs de x.",
+      "Oui, mais seulement pour x > 0.",
+      "Non, elle est toujours fausse."
+    ],
+    correctIdx: 0,
+    solution: "La distributivité \\(k(a+b) = ka + kb\\) est toujours vraie, quelle que soit la valeur de x.",
+    help: {
+      cours: "Une égalité qui est vraie pour toutes les valeurs = une identité.",
+      savoirFaire: "Vérifier en développant puis comparer.",
+      erreurs: ["Tester une seule valeur.", "Confondre égalité et équation.", "Douter d'une identité."]
+    }
+  };
+}
+
+/* --- 19. Équation avec regroupement complexe --- */
+function t3e_equation_complexe() {
+  const cases = [
+    { eq: '2x + 3 = -x + 9', sol: '2' },
+    { eq: '5x - 1 = 2x + 8', sol: '3' },
+    { eq: '7x + 4 = 3x - 8', sol: '-3' },
+    { eq: '-x + 6 = 2x - 9', sol: '5' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'algebre', title: 'Équation — regroupement',
+    body: `Résoudre : \\(${k.eq}\\).`,
+    type: 'input', expected: k.sol,
+    solution: `Regrouper les x d'un côté et les constantes de l'autre : \\(x = ${k.sol}\\).`,
+    help: {
+      cours: "Passer les x à gauche, les nombres à droite, diviser par le coefficient.",
+      savoirFaire: "Changer le signe d'un terme quand il change de côté.",
+      erreurs: ["Oublier de changer le signe.", "Se tromper de côté.", "Diviser mal à la fin."]
+    }
+  };
+}
+
+/* --- 20. Problème de périmètre (mise en équation géométrie) --- */
+function t3e_probleme_perimetre() {
+  return {
+    theme: 'algebre', title: 'Mise en équation — périmètre',
+    body: "Un triangle équilatéral et un carré ont le même périmètre. Le côté du triangle mesure \\(x\\) cm. Le côté du carré mesure \\(x - 2\\) cm. Quelle est la valeur de \\(x\\) ?",
+    type: 'input', expected: '8',
+    solution: "Triangle : \\(3x\\). Carré : \\(4(x - 2) = 4x - 8\\). Équation : \\(3x = 4x - 8\\) donc \\(x = 8\\) cm.",
+    help: {
+      cours: "Écrire chaque périmètre en fonction de x, égaler les deux, résoudre.",
+      savoirFaire: "Périmètre triangle équilatéral = 3 × côté. Périmètre carré = 4 × côté.",
+      erreurs: ["Oublier que le périmètre d'un triangle équilatéral = 3×.", "Erreur de distribution.", "Ne pas conclure (avec unité)."]
+    }
+  };
+}
+
+/* ==========================================================================
+   BLOC RATTRAPAGE PUISSANCES — 15 générateurs
+   ========================================================================== */
+
+/* --- P1. Puissance d'un relatif (signe) --- */
+function t1p_puissance_relatif() {
+  const cases = [
+    { expr: '(-2)^3', r: -8 }, { expr: '(-2)^4', r: 16 },
+    { expr: '-2^3', r: -8 }, { expr: '-2^4', r: -16 },
+    { expr: '(-3)^2', r: 9 }, { expr: '-3^2', r: -9 },
+    { expr: '(-5)^2', r: 25 }, { expr: '-(-3)^2', r: -9 },
+    { expr: '(-1)^{100}', r: 1 }, { expr: '(-1)^{99}', r: -1 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Puissance d\'un relatif',
+    body: `Calculer : \\(${k.expr}\\).`,
+    type: 'input', expected: String(k.r),
+    solution: `\\(${k.expr} = ${k.r}\\). Attention aux parenthèses !`,
+    help: {
+      cours: "⚠ <b>Sans parenthèses</b> : \\(-2^2 = -(2^2) = -4\\). <b>Avec parenthèses</b> : \\((-2)^2 = 4\\).",
+      savoirFaire: "Signe − : exposant pair → +, impair → −.",
+      erreurs: ["Confondre \\(-a^n\\) et \\((-a)^n\\).", "Oublier la règle signe-exposant.", "Erreur de calcul."]
+    }
+  };
+}
+
+/* --- P2. Produit de puissances même base --- */
+function t1p_produit_meme_base() {
+  const cases = [
+    { expr: '7^5 \\times 7^9', r: '7^{14}' },
+    { expr: '5^2 \\times 5^{13}', r: '5^{15}' },
+    { expr: '10^5 \\times 10^8', r: '10^{13}' },
+    { expr: '3^4 \\times 3^2', r: '3^6' },
+    { expr: '2^7 \\times 2^3', r: '2^{10}' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Produit de puissances de même base',
+    body: `Simplifier : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(a^m \\times a^n = a^{m+n}\\). Donc \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "<b>Règle</b> : \\(a^m \\times a^n = a^{m+n}\\) — on <b>additionne</b> les exposants.",
+      savoirFaire: "Même base → on additionne les exposants, la base ne change pas.",
+      erreurs: ["Multiplier les exposants au lieu d'additionner.", "Multiplier les bases.", "Oublier que la base reste identique."]
+    }
+  };
+}
+
+/* --- P3. Quotient de puissances même base --- */
+function t1p_quotient_meme_base() {
+  const cases = [
+    { expr: '\\dfrac{6^8}{6^7}', r: '6' },
+    { expr: '\\dfrac{12^8}{12^4}', r: '12^4' },
+    { expr: '\\dfrac{10^{12}}{10^5}', r: '10^7' },
+    { expr: '\\dfrac{5^{10}}{5^3}', r: '5^7' },
+    { expr: '\\dfrac{2^9}{2^6}', r: '2^3' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Quotient de puissances de même base',
+    body: `Simplifier : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(\\dfrac{a^m}{a^n} = a^{m-n}\\). Donc \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "<b>Règle</b> : \\(\\dfrac{a^m}{a^n} = a^{m-n}\\) — on <b>soustrait</b> les exposants.",
+      savoirFaire: "Même base → on soustrait l'exposant du bas à celui du haut.",
+      erreurs: ["Diviser les exposants.", "Inverser l'ordre de la soustraction.", "Oublier que la base reste identique."]
+    }
+  };
+}
+
+/* --- P4. Produit de puissances de 10 (négatifs compris) --- */
+function t1p_puissance_10_produit() {
+  const cases = [
+    { expr: '10^5 \\times 10^{-4}', r: '10^1' },
+    { expr: '10^{-3} \\times 10^8', r: '10^5' },
+    { expr: '10^2 \\times 10^{-7}', r: '10^{-5}' },
+    { expr: '10^{-6} \\times 10^{-3}', r: '10^{-9}' }
+  ];
+  const k = pick(cases);
+  const pool = cases.map(c => c.r);
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Produit de puissances de 10',
+    body: `Simplifier : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On additionne les exposants (même pour les négatifs) : \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "\\(10^m \\times 10^n = 10^{m+n}\\). Attention aux signes des exposants.",
+      savoirFaire: "Additionner les exposants en respectant la règle des signes.",
+      erreurs: ["Erreur de signe.", "Multiplier au lieu d'additionner.", "Oublier un exposant négatif."]
+    }
+  };
+}
+
+/* --- P5. Quotient de puissances de 10 (exposants négatifs) --- */
+function t1p_puissance_10_quotient() {
+  const cases = [
+    { expr: '\\dfrac{10^5 \\times 10^{-4}}{10^{-3}}', r: '10^4' },
+    { expr: '\\dfrac{10 \\times 10^{-4}}{10^{-8}}', r: '10^5' },
+    { expr: '\\dfrac{10^{-12} \\times 10^8}{10^4}', r: '10^{-8}' }
+  ];
+  const k = pick(cases);
+  const pool = ['10^4','10^5','10^{-8}','10^3','10^{-2}','10^{10}'];
+  const distract = shuffle(pool.filter(x => x !== k.r)).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Puissances de 10 — produit/quotient',
+    body: `Simplifier : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On additionne les exposants du numérateur, puis on soustrait celui du dénominateur.`,
+    help: {
+      cours: "Combiner les règles : produit (addition) + quotient (soustraction) des exposants.",
+      savoirFaire: "Traiter le numérateur d'abord, puis la division.",
+      erreurs: ["Erreur de signe cumulée.", "Oublier un exposant.", "Inverser ordre des opérations."]
+    }
+  };
+}
+
+/* --- P6. Exposant 0 et 1 --- */
+function t1p_exposant_0_1() {
+  const cases = [
+    { expr: '(-2)^0', r: '1' },
+    { expr: '(-3)^0', r: '1' },
+    { expr: '7^0', r: '1' },
+    { expr: '5^1', r: '5' },
+    { expr: '(-4)^1', r: '-4' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Exposant 0 ou 1',
+    body: `Calculer : \\(${k.expr}\\).`,
+    type: 'input', expected: k.r,
+    solution: `\\(a^0 = 1\\) (pour \\(a \\neq 0\\)) et \\(a^1 = a\\). Donc \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "<b>Conventions</b> : \\(a^0 = 1\\) (sauf pour 0) et \\(a^1 = a\\).",
+      savoirFaire: "Retenir : tout nombre non nul à la puissance 0 donne 1.",
+      erreurs: ["Écrire \\(a^0 = 0\\) (faux !).", "Écrire \\(a^1 = 1\\).", "Confondre \\(0^a\\) et \\(a^0\\)."]
+    }
+  };
+}
+
+/* --- P7. Priorités opératoires avec puissances --- */
+function t1p_priorites_puissances() {
+  const cases = [
+    { expr: '5^2 - (5 \\times 2 - 4^2)^2', r: '-11' },    // 25 - (10-16)^2 = 25 - 36 = -11
+    { expr: '(2 - 3)^2 - (2^2 - 3^2)', r: '6' },            // (-1)^2 - (4-9) = 1 -(-5) = 6
+    { expr: '5^2 \\times (7^2 - 50)', r: '-25' },           // 25 × (49-50) = 25 × (-1) = -25
+    { expr: '-3^2 \\times (3 - 5)^2', r: '-36' }            // -9 × 4 = -36
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Priorités avec puissances',
+    body: `Calculer : \\(${k.expr}\\).`,
+    type: 'input', expected: String(k.r),
+    solution: `Priorités : parenthèses, puissances, × et ÷, + et −. \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "<b>PEMDAS / PPMA</b> : Parenthèses, Puissances, Multiplications/Divisions, Additions/Soustractions.",
+      savoirFaire: "Calculer d'abord l'intérieur des parenthèses, puis les puissances, puis les produits, puis les sommes.",
+      erreurs: ["Calculer de gauche à droite sans tenir compte des priorités.", "Oublier les parenthèses.", "Mal gérer \\(-a^2\\) vs \\((-a)^2\\)."]
+    }
+  };
+}
+
+/* --- P8. Écrire en puissance (produit itéré) --- */
+function t1p_ecrire_puissance() {
+  const cases = [
+    { expr: '7 \\times 7 \\times 7 \\times 7 \\times 7', r: '7^5' },
+    { expr: '2 \\times 2 \\times 2', r: '2^3' },
+    { expr: '5 \\times 5 \\times 5 \\times 5', r: '5^4' },
+    { expr: '0{,}3 \\times 0{,}3 \\times 0{,}3 \\times 0{,}3', r: '0{,}3^4' },
+    { expr: '8 \\times 8 \\times 8 \\times 8 \\times 8', r: '8^5' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Écrire sous forme de puissance',
+    body: `Écrire \\(${k.expr}\\) sous la forme \\(a^n\\).`,
+    type: 'input', expected: [k.r, k.r.replace('{,}', ','), k.r.replace('{,}', '.')],
+    solution: `\\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "\\(a^n\\) = produit de \\(n\\) fois \\(a\\) par lui-même.",
+      savoirFaire: "Compter le nombre de facteurs = exposant.",
+      erreurs: ["Multiplier le nombre par l'exposant.", "Oublier un facteur.", "Confondre \\(a^n\\) et \\(a \\times n\\)."]
+    }
+  };
+}
+
+/* --- P9. Écriture scientifique avec ×10^n explicite --- */
+function t1p_ecriture_sci_basic() {
+  const cases = [
+    { n: '56{,}8 \\times 10^2', sci: '5{,}68 \\times 10^3' },
+    { n: '0{,}0023 \\times 10^{-7}', sci: '2{,}3 \\times 10^{-10}' },
+    { n: '123{,}45 \\times 10^{-4}', sci: '1{,}2345 \\times 10^{-2}' },
+    { n: '0{,}091 \\times 10^2', sci: '9{,}1' }
+  ];
+  const k = pick(cases);
+  const distract = shuffle(cases.filter(c => c.sci !== k.sci)).slice(0, 3).map(c => c.sci);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.sci}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Écriture scientifique (conversion)',
+    body: `Quelle est l'écriture scientifique de \\(${k.n}\\) ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Ajuster la virgule pour que la partie décimale soit entre 1 et 10, et ajuster l'exposant.`,
+    help: {
+      cours: "Écriture scientifique : \\(a \\times 10^n\\) avec \\(1 \\leq a < 10\\).",
+      savoirFaire: "Décaler la virgule, compenser sur l'exposant (attention au signe).",
+      erreurs: ["Partie décimale ≥ 10.", "Erreur de signe sur l'exposant.", "Ne pas compenser décalage."]
+    }
+  };
+}
+
+/* --- P10. Trouver n : 0,0045 × 10^n = 4,5 --- */
+function t1p_trouver_n() {
+  const cases = [
+    { before: '0{,}0045 \\times 10^n', after: '4{,}5', n: 3 },
+    { before: '0{,}0704 \\times 10^n', after: '7{,}04', n: 2 },
+    { before: '0{,}0000002 \\times 10^n', after: '2', n: 7 },
+    { before: '23 \\times 10^n', after: '2{,}3', n: -1 },
+    { before: '4500 \\times 10^n', after: '4{,}5', n: -3 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Trouver l\'exposant n',
+    body: `Déterminer l'entier \\(n\\) tel que \\(${k.before} = ${k.after}\\).`,
+    type: 'input', expected: String(k.n),
+    solution: `On compte les décalages de virgule entre les deux écritures : \\(n = ${k.n}\\).`,
+    help: {
+      cours: "Pour passer de l'un à l'autre, on décale la virgule. Chaque décalage vers la droite = exposant +1 (pour que le nombre reste égal).",
+      savoirFaire: "Compter les pas de virgule, regarder le sens pour le signe.",
+      erreurs: ["Signe de n inversé.", "Erreur de comptage.", "Confondre sens du décalage."]
+    }
+  };
+}
+
+/* --- P11. Programme de calcul (justifier l'égalité) --- */
+function t1p_programme_calcul() {
+  return {
+    theme: 'calcul', title: 'Programme de calcul (égalité de puissances)',
+    body: "Justifier que \\((2 \\times 3)^4 = 2^4 \\times 3^4\\). Que vaut ce nombre ?",
+    type: 'input', expected: '1296',
+    solution: "\\((2 \\times 3)^4 = 6^4 = 1296\\). Et \\(2^4 \\times 3^4 = 16 \\times 81 = 1296\\). Propriété : \\((a \\times b)^n = a^n \\times b^n\\).",
+    help: {
+      cours: "<b>Propriété</b> : \\((a \\times b)^n = a^n \\times b^n\\).",
+      savoirFaire: "Calculer soit le produit d'abord, soit chaque puissance, puis comparer.",
+      erreurs: ["Confondre avec \\((a+b)^n\\) (faux).", "Erreur de calcul.", "Oublier la propriété."]
+    }
+  };
+}
+
+/* --- P12. Propriété (a×b)^n --- */
+function t1p_produit_puissance_n() {
+  const cases = [
+    { expr: '(3 \\times 5)^3', r: '3^3 \\times 5^3' },
+    { expr: '(2 \\times 7)^5', r: '2^5 \\times 7^5' },
+    { expr: '(2 \\times 5)^4', r: '2^4 \\times 5^4' }
+  ];
+  const k = pick(cases);
+  const distract = cases.filter(c => c.r !== k.r).slice(0, 2).map(c => c.r);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.r}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${d}\\)`, correct: false })),
+    { html: `\\(${k.expr.replace('^', ' + ')}\\)`, correct: false }
+  ]);
+  return {
+    theme: 'calcul', title: '(a × b)^n',
+    body: `Développer : \\(${k.expr}\\).`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\((a \\times b)^n = a^n \\times b^n\\). Donc \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "<b>Propriété</b> : \\((a \\times b)^n = a^n \\times b^n\\).",
+      savoirFaire: "Élever chaque facteur à la puissance n.",
+      erreurs: ["Oublier d'élever un des facteurs.", "Confondre avec distributivité.", "Multiplier l'exposant par 2."]
+    }
+  };
+}
+
+/* --- P13. Factoriser une expression de puissances --- */
+function t1p_factoriser_puissances() {
+  const cases = [
+    { expr: '2 \\times 3^2 + 2 \\times 3^2', r: '2 \\times 3^3' },      // 2×(3²+3²)=2×2×3²=4×9=36=... pas top
+    { expr: '3^{15} \\times 2^{10} - 3^{13} \\times 2^{10}', r: '2^{10} \\times 3^{13} \\times 8' }
+  ];
+  return {
+    theme: 'calcul', title: 'Factoriser des puissances',
+    body: "Écrire \\(2 \\times 3^2 + 2 \\times 3^2\\) sous la forme \\(a^n\\).",
+    type: 'qcm',
+    choices: [
+      "\\(2^2 \\times 3^2\\)",
+      "\\(2 \\times 3^4\\)",
+      "\\(4 \\times 9\\)",
+      "\\(2^2 \\times 3^3\\)"
+    ],
+    correctIdx: 0,
+    solution: "\\(2 \\times 3^2 + 2 \\times 3^2 = 2 \\times (3^2 + 3^2) = 2 \\times 2 \\times 3^2 = 2^2 \\times 3^2\\).",
+    help: {
+      cours: "On factorise par le facteur commun, puis on simplifie.",
+      savoirFaire: "Identifier le facteur commun, le sortir, simplifier.",
+      erreurs: ["Ajouter les exposants au lieu de factoriser.", "Mal additionner.", "Confondre + et ×."]
+    }
+  };
+}
+
+/* --- P14. Puissance avec parenthèses complexes --- */
+function t1p_calcul_complexe() {
+  const cases = [
+    { expr: '(-3 + 2)^3 \\times (1 - 3)^2', r: -4 },     // (-1)^3 × (-2)^2 = -1 × 4 = -4
+    { expr: '-3^2 \\times (3 - 5)^2', r: -36 },           // -9 × 4 = -36
+    { expr: '(2 - 5)^2 \\times (-2)^3', r: -72 },          // 9 × (-8) = -72
+    { expr: '(-1)^{10} + (-1)^5', r: 0 }                    // 1 + (-1) = 0
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'calcul', title: 'Calcul complexe avec puissances',
+    body: `Calculer : \\(${k.expr}\\).`,
+    type: 'input', expected: String(k.r),
+    solution: `Calculer chaque partie séparément, puis combiner : \\(${k.expr} = ${k.r}\\).`,
+    help: {
+      cours: "Respecter l'ordre : parenthèses, puis puissances, puis ×.",
+      savoirFaire: "Calculer chaque facteur avant de les multiplier.",
+      erreurs: ["Distribuer la puissance sur une somme.", "Confondre parenthèses et pas.", "Erreur de signe."]
+    }
+  };
+}
+
+/* --- P15. Problème de doublement (bactéries / cellules) --- */
+function t1p_doublement() {
+  return {
+    theme: 'calcul', title: 'Problème de doublement',
+    body: "Une cellule de bambou se divise en 2 toutes les heures. On part de 1 cellule à midi. Combien y a-t-il de cellules au bout de 7 heures ?",
+    type: 'input', expected: '128',
+    solution: "Après n heures : \\(2^n\\) cellules. Au bout de 7 h : \\(2^7 = 128\\) cellules.",
+    help: {
+      cours: "Doublement itéré : \\(2^n\\) après n étapes.",
+      savoirFaire: "Compter les heures, élever 2 à cette puissance.",
+      erreurs: ["Utiliser n au lieu de 2^n.", "Multiplier par 2 au lieu d'élever.", "Erreur de compte d'heures."]
+    }
+  };
+}
+
+
+
 const QUESTION_BANK = {
   calcul: [
     t1_relatifs_produit, t1_relatifs_quotient, t1_signe_produit,
     t1_somme_fractions, t1_produit_fractions, t1_quotient_fractions, t1_inverse,
     t1_puissance_10, t1_notation_sci, t1_prefixes,
     t1_carre_parfait, t1_racine_parfaite, t1_encadrement_racine,
-    t1_comp_fractions
+    t1_comp_fractions,
+    // Bloc rattrapage puissances
+    t1p_puissance_relatif, t1p_produit_meme_base, t1p_quotient_meme_base,
+    t1p_puissance_10_produit, t1p_puissance_10_quotient, t1p_exposant_0_1,
+    t1p_priorites_puissances, t1p_ecrire_puissance, t1p_ecriture_sci_basic,
+    t1p_trouver_n, t1p_programme_calcul, t1p_produit_puissance_n,
+    t1p_factoriser_puissances, t1p_calcul_complexe, t1p_doublement
   ],
   arithmetique: [
     t2_premier, t2_decomposition, t2_frac_egales, t2_simplifier, t2_probleme_divisibilite
@@ -1579,7 +2494,15 @@ const QUESTION_BANK = {
   algebre: [
     t3_developper_simple, t3_reduire, t3_factoriser_simple,
     t3_tester_solution, t3_equation_simple, t3_equation_ax_cx,
-    t3_equivalence_programmes
+    t3_equivalence_programmes,
+    // Bloc éval calcul littéral
+    t3e_reduire_produit, t3e_reduire_somme, t3e_developper_negatif,
+    t3e_double_distrib, t3e_develop_plusieurs_par, t3e_factoriser_puissance,
+    t3e_tester_x2, t3e_equation_fraction, t3e_equation_developpement,
+    t3e_probleme_nombre, t3e_probleme_prix, t3e_structure_expression,
+    t3e_identifier_facteur_commun, t3e_equation_facile, t3e_simplifier_produit_lettres,
+    t3e_valeur_expression, t3e_developper_complexe, t3e_verifier_egalite,
+    t3e_equation_complexe, t3e_probleme_perimetre
   ],
   pourcent: [
     t4_pourcent_simple, t4_quatrieme_prop, t4_reconnaitre_proportionnalite, t4_vitesse_temps
