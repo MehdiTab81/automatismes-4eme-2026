@@ -122,6 +122,37 @@ function t1_somme_fractions() {
   };
 }
 
+// Différence de fractions
+function t1_diff_fractions() {
+  const cases = [
+    { a:'3/4', b:'1/4', r:'1/2' },
+    { a:'5/6', b:'1/3', r:'1/2' },
+    { a:'2/3', b:'1/6', r:'1/2' },
+    { a:'7/10', b:'1/5', r:'1/2' },
+    { a:'3/2', b:'5/6', r:'2/3' },
+    { a:'5/4', b:'2/3', r:'7/12' }
+  ];
+  const k = pick(cases);
+  const toLatex = f => { const [n,d]=f.split('/'); return `\\dfrac{${n}}{${d}}`; };
+  const pool = ['1/2','2/3','7/12','3/4','1/3','5/6','1/6'];
+  const distract = Array.from(new Set(pool.filter(x => x !== k.r))).slice(0, 3);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${toLatex(k.r)}\\)`, correct: true },
+    ...distract.map(d => ({ html: `\\(${toLatex(d)}\\)`, correct: false }))
+  ]);
+  return {
+    theme: 'calcul', title: 'Différence de fractions',
+    body: `\\(${toLatex(k.a)} - ${toLatex(k.b)}\\) est égal à :`,
+    type: 'qcm', choices, correctIdx,
+    solution: `On met au même dénominateur puis on soustrait les numérateurs.`,
+    help: {
+      cours: "Pour soustraire : même dénominateur d'abord, puis on soustrait les numérateurs.",
+      savoirFaire: "Chercher le plus petit dénominateur commun.",
+      erreurs: ["Soustraire numérateurs ET dénominateurs.", "Oublier de simplifier.", "Confondre avec l'addition."]
+    }
+  };
+}
+
 // Produit de fractions
 function t1_produit_fractions() {
   const cases = [
@@ -2878,7 +2909,7 @@ function t12_interaction_lutins() {
 const QUESTION_BANK = {
   calcul: [
     t1_relatifs_produit, t1_relatifs_quotient, t1_signe_produit,
-    t1_somme_fractions, t1_produit_fractions, t1_quotient_fractions, t1_inverse,
+    t1_somme_fractions, t1_diff_fractions, t1_produit_fractions, t1_quotient_fractions, t1_inverse,
     t1_puissance_10, t1_notation_sci, t1_prefixes,
     t1_carre_parfait, t1_racine_parfaite, t1_encadrement_racine,
     t1_comp_fractions,

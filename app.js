@@ -3163,6 +3163,16 @@ const FOCUS_PARCOURS = {
       't1p_programme_calcul', 't1p_produit_puissance_n',
       't1p_factoriser_puissances', 't1p_doublement'
     ]
+  },
+  'calcul-numerique': {
+    label: 'Calcul numérique (fractions)',
+    color: '#16a34a',
+    generators: [
+      't1_somme_fractions', 't1_diff_fractions',
+      't1_produit_fractions', 't1_quotient_fractions',
+      't1_inverse', 't1_comp_fractions',
+      't2_simplifier', 't2_frac_egales'
+    ]
   }
 };
 
