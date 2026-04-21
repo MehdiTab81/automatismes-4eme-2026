@@ -8,7 +8,7 @@
    Incrémente CACHE_VERSION quand on déploie une nouvelle version.
 */
 
-const CACHE_VERSION = 'v2-2026-04-22-4eme';
+const CACHE_VERSION = 'v3-2026-04-22-4eme';
 const SHELL_CACHE = `auto4e-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `auto4e-runtime-${CACHE_VERSION}`;
 

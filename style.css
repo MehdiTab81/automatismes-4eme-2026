@@ -556,6 +556,50 @@ button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .help-panel ul { margin: 4px 0 6px 20px; padding: 0; }
 .help-panel ul li { margin: 3px 0; }
 
+/* Train-actions : vérifier + aide côte à côte */
+.train-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.train-actions .help-btn { margin-top: 0; }
+.train-actions button.small { padding: 10px 18px; font-size: 0.95rem; }
+
+/* Feedback immédiat après "Vérifier" */
+.check-feedback {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  animation: slideDown var(--t-mid) var(--ease);
+  line-height: 1.5;
+}
+.check-feedback .fb-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.check-feedback .fb-body {
+  font-size: 0.95rem;
+}
+.check-feedback.ok {
+  background: var(--ok-soft);
+  border: 1.5px solid var(--ok);
+  color: var(--ok);
+}
+.check-feedback.ok .fb-body { color: var(--ink); }
+.check-feedback.ko {
+  background: var(--ko-soft);
+  border: 1.5px solid var(--ko);
+  color: var(--ko);
+}
+.check-feedback.ko .fb-body { color: var(--ink); }
+.check-feedback.warn {
+  background: var(--warn-soft);
+  border: 1.5px solid var(--warn);
+  color: var(--warn);
+}
+
 /* ==========================================================================
    Résultats
    ========================================================================== */

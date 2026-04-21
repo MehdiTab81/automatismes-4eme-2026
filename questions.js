@@ -1275,8 +1275,8 @@ function t8_conv_debit() {
   const cases = [
     { v: 2, unit: 'L/min', vOut: 120, unitOut: 'L/h' },
     { v: 60, unit: 'L/h', vOut: 1, unitOut: 'L/min' },
-    { v: 1, unit: 'm³/s', vOut: 60000, unitOut: 'L/min' },
-    { v: 3000, unit: 'L/min', vOut: 50, unitOut: 'L/s' }
+    { v: 120, unit: 'L/min', vOut: 2, unitOut: 'L/s' },
+    { v: 5, unit: 'L/s', vOut: 300, unitOut: 'L/min' }
   ];
   const k = pick(cases);
   return {
@@ -1404,7 +1404,7 @@ function t10_vocabulaire_proba() {
   const cases = [
     { q: "Quel est un événement certain quand on lance un dé à 6 faces ?", a: "Obtenir un numéro entre 1 et 6.", opts: ["Obtenir un numéro entre 1 et 6.", "Obtenir 7.", "Obtenir un 2.", "Obtenir 0."] },
     { q: "Quel est un événement impossible quand on lance un dé à 6 faces ?", a: "Obtenir 7.", opts: ["Obtenir 7.", "Obtenir 3.", "Obtenir un nombre pair.", "Obtenir un nombre entre 1 et 6."] },
-    { q: "Dans une urne avec 3 boules rouges et 2 bleues, quelle probabilité est impossible ?", a: "1,5", opts: ["1,5", "0", "1", "0,4"] }
+    { q: "Laquelle de ces valeurs <b>ne peut pas</b> être une probabilité ?", a: "1,5", opts: ["1,5", "0", "1", "0,4"] }
   ];
   const k = pick(cases);
   const { choices, correctIdx } = makeQCM([
@@ -1474,14 +1474,166 @@ function t10_proba_simple() {
 }
 
 
+
+/* ==========================================================================
+   Rendu de blocs Scratch en SVG (issu du site 3ème, adapté 4ème)
+   ========================================================================== */
+const SCRATCH_COLORS = {
+  event:    '#FFBF00',
+  control:  '#FFAB19',
+  motion:   '#4C97FF',
+  variable: '#FF8C1A',
+  pen:      '#0FBD8C',
+  operator: '#59C059',
+  looks:    '#9966FF',
+  define:   '#FF6680',
+  sensing:  '#4CBFE6'
+};
+const SCRATCH_GEOM = { nX: 14, nW: 18, nD: 4, stemW: 14, stackH: 32, cTopH: 32, cBotH: 14, r: 3 };
+
+function scratchPathStack(x, y, w, h, { notch = true, tab = true } = {}) {
+  const { nX, nW, nD, r } = SCRATCH_GEOM;
+  let d = `M ${x + r} ${y}`;
+  if (notch) d += ` L ${x + nX} ${y} L ${x + nX + 3} ${y + nD} L ${x + nX + nW - 3} ${y + nD} L ${x + nX + nW} ${y}`;
+  d += ` L ${x + w - r} ${y} Q ${x + w} ${y} ${x + w} ${y + r}`;
+  d += ` L ${x + w} ${y + h - r} Q ${x + w} ${y + h} ${x + w - r} ${y + h}`;
+  if (tab) d += ` L ${x + nX + nW} ${y + h} L ${x + nX + nW - 3} ${y + h + nD} L ${x + nX + 3} ${y + h + nD} L ${x + nX} ${y + h}`;
+  d += ` L ${x + r} ${y + h} Q ${x} ${y + h} ${x} ${y + h - r}`;
+  d += ` L ${x} ${y + r} Q ${x} ${y} ${x + r} ${y} Z`;
+  return d;
+}
+function scratchPathHat(x, y, w, h) {
+  const { nX, nW, nD } = SCRATCH_GEOM;
+  let d = `M ${x} ${y + 12} Q ${x} ${y} ${x + 12} ${y} L ${x + w - 12} ${y} Q ${x + w} ${y} ${x + w} ${y + 12}`;
+  d += ` L ${x + w} ${y + h}`;
+  d += ` L ${x + nX + nW} ${y + h} L ${x + nX + nW - 3} ${y + h + nD} L ${x + nX + 3} ${y + h + nD} L ${x + nX} ${y + h}`;
+  d += ` L ${x} ${y + h} Z`;
+  return d;
+}
+function scratchPathDefine(x, y, w, h) {
+  const { nX, nW, nD } = SCRATCH_GEOM;
+  let d = `M ${x} ${y + 10} Q ${x} ${y - 2} ${x + 18} ${y} Q ${x + w / 2} ${y - 6} ${x + w - 18} ${y} Q ${x + w} ${y - 2} ${x + w} ${y + 10}`;
+  d += ` L ${x + w} ${y + h}`;
+  d += ` L ${x + nX + nW} ${y + h} L ${x + nX + nW - 3} ${y + h + nD} L ${x + nX + 3} ${y + h + nD} L ${x + nX} ${y + h}`;
+  d += ` L ${x} ${y + h} Z`;
+  return d;
+}
+function scratchPathCBlock(x, y, w, topH, innerH, botH) {
+  const { nX, nW, nD, stemW } = SCRATCH_GEOM;
+  const y2 = y + topH, y3 = y + topH + innerH, y4 = y3 + botH;
+  const ixN = x + stemW + nX;
+  let d = `M ${x} ${y}`;
+  d += ` L ${x + nX} ${y} L ${x + nX + 3} ${y + nD} L ${x + nX + nW - 3} ${y + nD} L ${x + nX + nW} ${y}`;
+  d += ` L ${x + w} ${y} L ${x + w} ${y2}`;
+  d += ` L ${ixN + nW} ${y2} L ${ixN + nW - 3} ${y2 + nD} L ${ixN + 3} ${y2 + nD} L ${ixN} ${y2}`;
+  d += ` L ${x + stemW} ${y2} L ${x + stemW} ${y3}`;
+  d += ` L ${ixN} ${y3} L ${ixN + 3} ${y3 + nD} L ${ixN + nW - 3} ${y3 + nD} L ${ixN + nW} ${y3}`;
+  d += ` L ${x + w} ${y3} L ${x + w} ${y4}`;
+  d += ` L ${x + nX + nW} ${y4} L ${x + nX + nW - 3} ${y4 + nD} L ${x + nX + 3} ${y4 + nD} L ${x + nX} ${y4}`;
+  d += ` L ${x} ${y4} Z`;
+  return d;
+}
+const CHAR_W = 7;
+function scratchRenderContent(x0, y, h, text) {
+  const tokens = [];
+  const re = /\{(v|n|op|t):([^{}]+)\}/g;
+  let lastIdx = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIdx) tokens.push({ kind: 'label', value: text.slice(lastIdx, m.index) });
+    tokens.push({ kind: m[1], value: m[2] });
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) tokens.push({ kind: 'label', value: text.slice(lastIdx) });
+  let cx = x0 + 10;
+  const cy = y + h / 2;
+  const pillH = h - 12;
+  let svg = '';
+  tokens.forEach((t, i) => {
+    const value = String(t.value);
+    const textW = value.replace(/\s/g, ' ').length * CHAR_W;
+    if (t.kind === 'label') {
+      const trimmed = value.trim();
+      if (!trimmed) { cx += CHAR_W; return; }
+      if (i > 0) cx += 3;
+      svg += `<text x="${cx}" y="${cy + 4.5}" fill="white" font-size="13" font-weight="600" font-family="ui-sans-serif,system-ui">${trimmed}</text>`;
+      cx += trimmed.length * CHAR_W + 3;
+    } else {
+      const pad = 10;
+      const w = Math.max(22, textW + pad * 2);
+      let pillFill, textFill;
+      if (t.kind === 'v') { pillFill = 'rgba(0,0,0,0.18)'; textFill = 'white'; }
+      else if (t.kind === 'n' || t.kind === 't') { pillFill = 'white'; textFill = '#1a1a1a'; }
+      else { pillFill = SCRATCH_COLORS.operator; textFill = 'white'; }
+      svg += `<rect x="${cx}" y="${cy - pillH/2}" width="${w}" height="${pillH}" rx="${pillH/2}" fill="${pillFill}" stroke="rgba(0,0,0,0.15)" stroke-width="0.6"/>`;
+      svg += `<text x="${cx + w/2}" y="${cy + 4}" fill="${textFill}" font-size="12" font-weight="600" text-anchor="middle" font-family="ui-sans-serif,system-ui">${value}</text>`;
+      cx += w + 4;
+    }
+  });
+  return svg;
+}
+function scratchProgram(blocks) {
+  const W = 340, xPad = 14;
+  const { stemW, stackH, cTopH, cBotH, nD } = SCRATCH_GEOM;
+  const items = [];
+  let y = 10;
+  function layout(list, x) {
+    list.forEach(b => {
+      if (b.inner && b.inner.length > 0) {
+        const idx = items.length;
+        items.push({ kind: 'cBlock', x, y, w: W - xPad - x, topH: cTopH, innerH: 0, botH: cBotH, text: b.text, color: SCRATCH_COLORS[b.type] || '#777' });
+        y += cTopH;
+        layout(b.inner, x + stemW);
+        items[idx].innerH = y - items[idx].y - cTopH;
+        y += cBotH;
+      } else {
+        const kind = b.type === 'event' ? 'hat' : b.type === 'define' ? 'define' : 'stack';
+        items.push({ kind, x, y, w: W - xPad - x, h: stackH, text: b.text, color: SCRATCH_COLORS[b.type] || '#777' });
+        y += stackH;
+      }
+    });
+  }
+  layout(blocks, xPad);
+  const H = y + nD + 8;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block;margin:10px auto;background:#fafafa;border:1px solid #e0e0e0;border-radius:8px;">`;
+  svg += `<defs><filter id="scratchShadow" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.2"/></filter></defs>`;
+  const strokeStyle = 'stroke="rgba(0,0,0,0.18)" stroke-width="1"';
+  items.forEach(it => {
+    if (it.kind !== 'cBlock') return;
+    const d = scratchPathCBlock(it.x, it.y, it.w, it.topH, it.innerH, it.botH);
+    svg += `<path d="${d}" fill="${it.color}" ${strokeStyle} filter="url(#scratchShadow)"/>`;
+    svg += scratchRenderContent(it.x, it.y, it.topH, it.text);
+  });
+  items.forEach(it => {
+    if (it.kind === 'cBlock') return;
+    const { x, y, w, h, text, kind, color } = it;
+    let d;
+    if (kind === 'hat') d = scratchPathHat(x, y, w, h);
+    else if (kind === 'define') d = scratchPathDefine(x, y, w, h);
+    else d = scratchPathStack(x, y, w, h);
+    svg += `<path d="${d}" fill="${color}" ${strokeStyle} filter="url(#scratchShadow)"/>`;
+    svg += scratchRenderContent(x, y, h, text);
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+
 /* ------------------------------------------------------------------
    THÈME 11 — ALGORITHMIQUE (Scratch niveaux 1 et 2)
    ------------------------------------------------------------------ */
 
+
 function t11_scratch_boucle() {
+  const prog = scratchProgram([
+    { type: 'event', text: 'quand drapeau cliqué' },
+    { type: 'control', text: 'répéter {n:4} fois', inner: [
+      { type: 'motion', text: 'avancer de {n:50}' },
+      { type: 'motion', text: 'tourner de {n:90} degrés' }
+    ]}
+  ]);
   return {
     theme: 'algo', title: 'Boucle « répéter … fois »',
-    body: `Avec une boucle "répéter 4 fois" contenant "avancer de 50 ; tourner de 90°", quelle figure est tracée ?`,
+    body: `Quelle figure trace ce programme ?${prog}`,
     type: 'qcm',
     choices: [
       "Un carré de côté 50.",
@@ -1492,8 +1644,8 @@ function t11_scratch_boucle() {
     correctIdx: 0,
     solution: "4 répétitions de (avancer + tourner 90°) tracent un carré.",
     help: {
-      cours: "Pour tracer un polygone régulier : répéter \\(n\\) fois (avancer + tourner \\(\\dfrac{360°}{n}\\)).",
-      savoirFaire: "Nb côtés × angle = 360°.",
+      cours: "Pour tracer un polygone régulier à \\(n\\) côtés : répéter \\(n\\) fois (avancer + tourner \\(\\dfrac{360°}{n}\\)).",
+      savoirFaire: "Nombre de côtés × angle = 360°.",
       erreurs: ["Confondre nb côtés et angle.", "Oublier de tourner.", "Se tromper d'angle."]
     }
   };
@@ -1505,9 +1657,16 @@ function t11_scratch_angle_polygone() {
     { n: 5, r: 72 }, { n: 6, r: 60 }, { n: 8, r: 45 }
   ];
   const k = pick(cases);
+  const prog = scratchProgram([
+    { type: 'event', text: 'quand drapeau cliqué' },
+    { type: 'control', text: `répéter {n:${k.n}} fois`, inner: [
+      { type: 'motion', text: 'avancer de {n:50}' },
+      { type: 'motion', text: 'tourner de {n:?} degrés' }
+    ]}
+  ]);
   return {
     theme: 'algo', title: 'Polygone régulier — angle',
-    body: `Pour tracer un polygone régulier à ${k.n} côtés, quel angle faut-il tourner à chaque étape (en °) ?`,
+    body: `Pour tracer un polygone régulier à <b>${k.n} côtés</b>, quel angle faut-il mettre à la place du « ? » (en °) ?${prog}`,
     type: 'input', expected: String(k.r), suffix: '°',
     solution: `Angle = \\(\\dfrac{360}{${k.n}} = ${k.r}°\\).`,
     help: {
@@ -1519,44 +1678,80 @@ function t11_scratch_angle_polygone() {
 }
 
 function t11_scratch_condition() {
+  const cases = [
+    { n: 8, threshold: 5, res: 'Grand' },
+    { n: 3, threshold: 5, res: 'Petit' },
+    { n: 12, threshold: 10, res: 'Gagné' }
+  ];
+  const k = pick(cases);
+  const isGrand = k.n > k.threshold;
+  const msg1 = k.res === 'Grand' || k.res === 'Gagné' ? k.res : 'Grand';
+  const msg2 = k.res === 'Grand' || k.res === 'Gagné' ? 'Petit' : 'Petit';
+  const finalMsg = isGrand ? (k.res === 'Gagné' ? 'Gagné' : 'Grand') : 'Petit';
+  const prog = scratchProgram([
+    { type: 'event', text: 'quand drapeau cliqué' },
+    { type: 'variable', text: `mettre {v:n} à {n:${k.n}}` },
+    { type: 'control', text: `si {op:n > ${k.threshold}} alors`, inner: [
+      { type: 'looks', text: `dire {t:${msg1}}` }
+    ]},
+    { type: 'control', text: 'sinon', inner: [
+      { type: 'looks', text: `dire {t:${msg2}}` }
+    ]}
+  ]);
+  const distract = [msg1, msg2, 'Rien', 'Les deux'].filter(d => d !== finalMsg);
+  const { choices, correctIdx } = makeQCM([
+    { html: finalMsg, correct: true },
+    ...shuffle(distract).slice(0, 3).map(d => ({ html: d, correct: false }))
+  ]);
   return {
     theme: 'algo', title: 'Instruction conditionnelle « si … alors »',
-    body: 'Dans un script, on a : « Mettre n à 8 ; si n > 5 alors dire « Grand » ; sinon dire « Petit » ». Que dit le lutin ?',
-    type: 'qcm',
-    choices: [
-      "Grand",
-      "Petit",
-      "Rien",
-      "Les deux à la fois"
-    ],
-    correctIdx: 0,
-    solution: "n = 8 et 8 > 5, donc on exécute la branche « alors » : le lutin dit <b>Grand</b>.",
+    body: `Que dit le lutin après exécution ?${prog}`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Ici \\(n = ${k.n}\\) ${k.n > k.threshold ? '>' : '\\leq'} ${k.threshold}, donc on entre dans la branche « ${k.n > k.threshold ? 'alors' : 'sinon'} » et le lutin dit <b>${finalMsg}</b>.`,
     help: {
-      cours: "<b>Si … alors … sinon</b> : exécute la première branche si la condition est vraie, la seconde sinon.",
-      savoirFaire: "1) Lire la valeur. 2) Tester la condition. 3) Suivre la bonne branche.",
+      cours: "<b>Si … alors … sinon</b> : teste une condition et exécute l'une ou l'autre branche.",
+      savoirFaire: "1) Lire la valeur de la variable. 2) Tester la condition. 3) Suivre la branche correspondante.",
       erreurs: ["Exécuter les deux branches.", "Confondre > et ≥.", "Oublier le sinon."]
     }
   };
 }
 
 function t11_scratch_variable() {
+  const cases = [
+    { start: 0, step: 3, rep: 5, r: 15 },
+    { start: 10, step: 2, rep: 4, r: 18 },
+    { start: 0, step: 5, rep: 4, r: 20 },
+    { start: 1, step: 2, rep: 6, r: 13 }
+  ];
+  const k = pick(cases);
+  const prog = scratchProgram([
+    { type: 'event', text: 'quand drapeau cliqué' },
+    { type: 'variable', text: `mettre {v:x} à {n:${k.start}}` },
+    { type: 'control', text: `répéter {n:${k.rep}} fois`, inner: [
+      { type: 'variable', text: `ajouter {n:${k.step}} à {v:x}` }
+    ]}
+  ]);
   return {
-    theme: 'algo', title: 'Variable dans un script',
-    body: "Dans un script : « Mettre x à 0 ; répéter 5 fois : ajouter 3 à x ». Quelle est la valeur finale de x ?",
-    type: 'input', expected: '15',
-    solution: "On part de 0, on ajoute 3 cinq fois : \\(0 + 5 \\times 3 = 15\\).",
+    theme: 'algo', title: 'Variable qui compte',
+    body: `Quelle est la valeur finale de la variable <b>x</b> ?${prog}`,
+    type: 'input', expected: String(k.r),
+    solution: `On part de ${k.start} et on ajoute ${k.step} à chaque passage (${k.rep} fois) : \\(${k.start} + ${k.rep} \\times ${k.step} = ${k.r}\\).`,
     help: {
-      cours: "Une <b>variable</b> conserve une valeur qui peut être modifiée par le programme.",
-      savoirFaire: "Dérouler la boucle : valeur initiale + nb répétitions × pas.",
-      erreurs: ["Oublier la valeur initiale.", "Compter un passage de trop.", "Confondre « mettre à » et « ajouter à »."]
+      cours: "Une <b>variable</b> conserve une valeur qui peut être modifiée par le programme. Le bloc « ajouter … à » incrémente la valeur actuelle.",
+      savoirFaire: "Dérouler la boucle : valeur initiale + (nb répétitions) × (pas).",
+      erreurs: ["Oublier la valeur initiale.", "Compter un passage de trop.", "Confondre « mettre à » (remplace) et « ajouter à » (incrémente)."]
     }
   };
 }
 
 function t11_scratch_evenement() {
+  const prog = scratchProgram([
+    { type: 'event', text: 'quand drapeau cliqué' },
+    { type: 'motion', text: 'avancer de {n:10}' }
+  ]);
   return {
     theme: 'algo', title: 'Événement « quand drapeau cliqué »',
-    body: "Dans Scratch, quand un script démarre-t-il avec le bloc « quand drapeau vert cliqué » ?",
+    body: `Quand ce script s'exécute-t-il ?${prog}`,
     type: 'qcm',
     choices: [
       "Quand l'utilisateur clique sur le drapeau vert.",
@@ -1565,14 +1760,17 @@ function t11_scratch_evenement() {
       "En continu."
     ],
     correctIdx: 0,
-    solution: "Ce bloc déclenche le script uniquement au clic sur le drapeau vert.",
+    solution: "Le bloc <b>« quand drapeau cliqué »</b> déclenche le script au clic sur le drapeau vert.",
     help: {
-      cours: "Les blocs « événement » déclenchent un script quand un événement se produit (clic, touche, lutin touché…).",
-      savoirFaire: "Repérer le bloc « chapeau » en haut de la pile d'instructions.",
-      erreurs: ["Penser qu'un script démarre tout seul.", "Confondre les événements.", "Oublier qu'il peut y avoir plusieurs scripts."]
+      cours: "Un <b>événement</b> (drapeau cliqué, touche pressée, lutin touché...) permet de déclencher un script. C'est le « chapeau » placé en haut de la pile.",
+      savoirFaire: "Repérer le bloc « quand … » qui coiffe la pile d'instructions.",
+      erreurs: ["Penser qu'un script démarre tout seul.", "Confondre les blocs d'événement.", "Oublier qu'il peut y avoir plusieurs scripts en parallèle."]
     }
   };
 }
+
+// (t12_interaction_lutins a ete deplacee dans le bloc algo en haut, avec rendu SVG)
+
 
 /* ==========================================================================
    EXPORT : QUESTION_BANK + THEME_META
@@ -1736,7 +1934,7 @@ function t3e_develop_plusieurs_par() {
 function t3e_factoriser_puissance() {
   const cases = [
     { expr: 'x^2 - 3x', fact: 'x(x - 3)' },
-    { expr: '-9x + 12', fact: '-3(3x - 4)', alt: '3(-3x + 4)' },
+    { expr: '9x + 12', fact: '3(3x + 4)' },
     { expr: '9x^3 - 6x^2 + 3x', fact: '3x(3x^2 - 2x + 1)' },
     { expr: '4x^2 + 8x', fact: '4x(x + 2)' },
     { expr: '5x^2 - 15x', fact: '5x(x - 3)' },
@@ -1878,15 +2076,31 @@ function t3e_probleme_prix() {
   const cases = [
     {
       q: "Blandine achète 6 classeurs et 1 livre pour 27,60 €. Le livre coûte 12 €. Quel est le prix (en €) d'un classeur ?",
-      sol: '2,60', num: 2.6, equation: "6x + 12 = 27,60"
+      sol: '2,60', equation: "6x + 12 = 27,60"
     },
     {
       q: "5 stylos identiques et un cahier à 4 € coûtent au total 14 €. Quel est le prix (en €) d'un stylo ?",
-      sol: '2', num: 2, equation: "5x + 4 = 14"
+      sol: '2', equation: "5x + 4 = 14"
     },
     {
-      q: "Marie a acheté 3 t-shirts identiques et un pantalon à 25 €. Le total fait 58 €. Quel est le prix (en €) d'un t-shirt ?",
-      sol: '11', num: 11, equation: "3x + 25 = 58"
+      q: "Marie achète 3 t-shirts identiques et un pantalon à 25 €. Le total fait 58 €. Quel est le prix (en €) d'un t-shirt ?",
+      sol: '11', equation: "3x + 25 = 58"
+    },
+    {
+      q: "Un club de sport propose un abonnement annuel à 45 € plus 3 € par séance. Léa paie 105 €. Combien de séances a-t-elle suivies ?",
+      sol: '20', equation: "45 + 3x = 105"
+    },
+    {
+      q: "Pour réduire la consommation, une famille a déjà économisé 8 litres, puis économise 2 litres par jour. Elle veut atteindre 30 L économisés. Combien de jours faudra-t-il ?",
+      sol: '11', equation: "8 + 2x = 30"
+    },
+    {
+      q: "Au restaurant, Tom commande 2 plats identiques et un dessert à 5 €. Il paie 31 €. Quel est le prix (en €) d'un plat ?",
+      sol: '13', equation: "2x + 5 = 31"
+    },
+    {
+      q: "Un livreur parcourt chaque jour une distance fixe de 4 km à pied, plus 12 km à vélo par course. En une journée, il parcourt 52 km. Combien a-t-il fait de courses ?",
+      sol: '4', equation: "4 + 12x = 52"
     }
   ];
   const k = pick(cases);
@@ -1894,7 +2108,7 @@ function t3e_probleme_prix() {
     theme: 'algebre', title: 'Mise en équation — prix',
     body: k.q,
     type: 'input', expected: [k.sol, k.sol.replace(',', '.')],
-    solution: `Soit \\(x\\) le prix cherché. Équation : \\(${k.equation}\\). D'où \\(x = ${k.sol}\\) €.`,
+    solution: `Soit \\(x\\) l'inconnue. Équation : \\(${k.equation}\\). D'où \\(x = ${k.sol}\\).`,
     help: {
       cours: "Pour une mise en équation : nommer l'inconnue, exprimer le total, résoudre.",
       savoirFaire: "Vérifier avec la valeur trouvée que le total est bon.",
@@ -1906,26 +2120,28 @@ function t3e_probleme_prix() {
 /* --- 12. Expression somme ou produit ? --- */
 function t3e_structure_expression() {
   const cases = [
-    { expr: '3x + 12', nature: 'somme', autre: '3(x + 4)' },
-    { expr: '3(x + 4)', nature: 'produit', autre: '3x + 12' },
-    { expr: '5(2x - 1)', nature: 'produit', autre: '10x - 5' },
-    { expr: '10x - 5', nature: 'somme (différence)', autre: '5(2x - 1)' },
-    { expr: '(x + 2)(x - 3)', nature: 'produit', autre: 'x^2 - x - 6' }
+    { expr: '3x + 12', nature: 'somme' },
+    { expr: '3(x + 4)', nature: 'produit' },
+    { expr: '5(2x - 1)', nature: 'produit' },
+    { expr: '10x - 5', nature: 'somme' },
+    { expr: '(x + 2)(x - 3)', nature: 'produit' },
+    { expr: '7x^2 + 3x - 2', nature: 'somme' },
+    { expr: '2x \\times (x + 1)', nature: 'produit' }
   ];
   const k = pick(cases);
-  const options = ['somme', 'produit', 'somme (différence)'];
-  const { choices, correctIdx } = makeQCM(options.map(o => ({
-    html: o.charAt(0).toUpperCase() + o.slice(1), correct: o === k.nature
-  })));
+  const { choices, correctIdx } = makeQCM([
+    { html: 'Une somme', correct: k.nature === 'somme' },
+    { html: 'Un produit', correct: k.nature === 'produit' }
+  ]);
   return {
-    theme: 'algebre', title: 'Nature d\'une expression',
-    body: `L'expression \\(${k.expr}\\) est-elle une somme ou un produit ?`,
+    theme: 'algebre', title: 'Somme ou produit ?',
+    body: `L'expression \\(${k.expr}\\) est-elle une somme ou un produit ? (On regarde la <b>dernière opération</b>.)`,
     type: 'qcm', choices, correctIdx,
-    solution: `\\(${k.expr}\\) est un(e) <b>${k.nature}</b>.`,
+    solution: `\\(${k.expr}\\) est un(e) <b>${k.nature}</b> — car la dernière opération à effectuer est ${k.nature === 'somme' ? 'une addition/soustraction' : 'une multiplication'}.`,
     help: {
-      cours: "Une <b>somme</b> se termine par +/− entre deux termes non regroupés. Un <b>produit</b> est une multiplication (parenthèses collées).",
-      savoirFaire: "Regarder la <b>dernière opération</b> qu'on ferait en calculant.",
-      erreurs: ["Confondre forme développée / factorisée.", "Ignorer les parenthèses.", "Se focaliser sur le 1er signe."]
+      cours: "La <b>nature</b> d'une expression = sa <b>dernière opération</b>.<br>• <b>Somme</b> : se termine par + ou − entre deux termes (forme développée).<br>• <b>Produit</b> : multiplication entre nombres et/ou parenthèses (forme factorisée).",
+      savoirFaire: "Imaginer l'ordre de calcul avec une valeur pour x : quelle serait la toute dernière opération ?",
+      erreurs: ["Confondre forme développée / factorisée.", "Ignorer les parenthèses.", "Se fier au 1er signe au lieu de la dernière opération."]
     }
   };
 }
@@ -2738,9 +2954,10 @@ function t9_conv_vitesse() {
 
 function t9_conv_debit() {
   const cases = [
-    { v: 1, from: 'm³/s', vR: 60000, to: 'L/min', sol: '1 m³/s = 1000 L/s = 60 000 L/min' },
-    { v: 120, from: 'L/min', vR: 0.002, to: 'm³/s', sol: '120 L/min = 2 L/s = 0,002 m³/s' },
-    { v: 30, from: 'L/s', vR: 1800, to: 'L/min', sol: '30 × 60 = 1800' }
+    { v: 0.5, from: 'm³/s', vR: 500, to: 'L/s', sol: '0,5 m³ = 500 L ; donc 0,5 m³/s = 500 L/s' },
+    { v: 2, from: 'L/s', vR: 120, to: 'L/min', sol: '2 × 60 = 120' },
+    { v: 300, from: 'L/min', vR: 5, to: 'L/s', sol: '300 ÷ 60 = 5' },
+    { v: 10, from: 'L/s', vR: 600, to: 'L/min', sol: '10 × 60 = 600' }
   ];
   const k = pick(cases);
   return {
@@ -2885,21 +3102,29 @@ function t2_liste_premiers() {
 /* --- ALGO SCRATCH (+1) --- */
 
 function t12_interaction_lutins() {
+  const prog = scratchProgram([
+    { type: 'event', text: 'quand drapeau cliqué' },
+    { type: 'control', text: 'répéter indéfiniment', inner: [
+      { type: 'control', text: 'si {op:touche le lutin Cible ?} alors', inner: [
+        { type: 'looks', text: 'dire {t:Touché !}' }
+      ]}
+    ]}
+  ]);
   return {
     theme: 'algo', title: 'Interaction entre 2 lutins',
-    body: "Dans Scratch, pour faire dire une phrase à un lutin quand il en touche un autre, quel bloc utilise-t-on ?",
+    body: `Pour qu'un lutin dise « Touché ! » quand il en touche un autre, quel type de bloc utilise-t-on ?${prog}`,
     type: 'qcm',
     choices: [
-      "si « touche le lutin X » alors dire ...",
-      "répéter 10 fois dire ...",
-      "attendre 1 seconde dire ...",
-      "ajouter 1 à compteur"
+      "Une instruction conditionnelle avec le capteur « touche le lutin X ».",
+      "Une simple boucle « répéter 10 fois ».",
+      "Un bloc « attendre 1 seconde ».",
+      "Un bloc « ajouter 1 à compteur »."
     ],
     correctIdx: 0,
-    solution: "On utilise une <b>instruction conditionnelle</b> avec le capteur « touche le lutin X ».",
+    solution: "On utilise une <b>instruction conditionnelle</b> (si…alors) avec le <b>capteur</b> « touche le lutin X », placée dans une boucle « répéter indéfiniment ».",
     help: {
-      cours: "Pour gérer l'interaction : condition \"si touche...\" + action (dire, bouger...).",
-      savoirFaire: "Placer le bloc dans une boucle « répéter indéfiniment » pour tester en continu.",
+      cours: "Pour gérer l'interaction : condition « si touche X » + action (dire, bouger…) dans une boucle infinie.",
+      savoirFaire: "Placer la condition dans une boucle « répéter indéfiniment ».",
       erreurs: ["Oublier de tester en continu.", "Mauvais capteur.", "Confondre touche et clic."]
     }
   };

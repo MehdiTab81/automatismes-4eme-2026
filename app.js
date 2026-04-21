@@ -1140,7 +1140,11 @@ function renderQuestion() {
     <div class="q-body">${q.body}</div>
     ${answerBlock}
     ${state.mode === 'train' ? `
-      <button class="help-btn" id="btn-help">Aide — rappel de cours</button>
+      <div class="train-actions">
+        <button class="primary small" id="btn-check">✓ Vérifier</button>
+        <button class="help-btn" id="btn-help">Aide — rappel de cours</button>
+      </div>
+      <div id="check-feedback" class="check-feedback" style="display:none;"></div>
       <div id="help-panel" style="display:none;"></div>
     ` : ''}
   `;
@@ -1181,6 +1185,29 @@ function renderQuestion() {
       panel.style.display = 'block';
       renderMath(panel);
       renderDots();
+    });
+    // Bouton "Vérifier" = feedback immédiat (P1)
+    $('#btn-check')?.addEventListener('click', () => {
+      const ans = state.answers[state.current];
+      const q = state.series[state.current];
+      const isAns = q.type === 'input' ? (ans.inputAnswer && ans.inputAnswer.trim()) : (ans.selectedIdx !== null);
+      const fb = $('#check-feedback');
+      if (!isAns) {
+        fb.className = 'check-feedback warn';
+        fb.innerHTML = '⚠️ Réponds d\'abord à la question avant de vérifier.';
+        fb.style.display = 'block';
+        return;
+      }
+      const ok = isAnswerCorrect(q, ans);
+      if (ok) {
+        fb.className = 'check-feedback ok';
+        fb.innerHTML = `<div class="fb-title">✅ Bonne réponse !</div><div class="fb-body">${q.solution}</div>`;
+      } else {
+        fb.className = 'check-feedback ko';
+        fb.innerHTML = `<div class="fb-title">❌ Ce n'est pas ça.</div><div class="fb-body"><strong>Correction :</strong> ${q.solution}</div>`;
+      }
+      fb.style.display = 'block';
+      renderMath(fb);
     });
   }
 
