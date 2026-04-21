@@ -825,7 +825,7 @@ function t4_vitesse_temps() {
 
 function t5_lecture_graphique() {
   return {
-    theme: 'fonctions', title: 'Lecture graphique',
+    theme: 'pourcent', title: 'Lecture graphique (dépendance)',
     body: `Sur un graphique représentant la température d'un four en fonction du temps, on lit que la courbe passe par le point \\((5 \\text{ min } ; \\, 95\\,°C)\\). Que peut-on en déduire ?`,
     type: 'qcm',
     choices: [
@@ -868,7 +868,7 @@ function t5_formule_dependance() {
     ...k.distract.map(d => ({ html: `\\(${d}\\)`, correct: false }))
   ]);
   return {
-    theme: 'fonctions', title: 'Formule de dépendance',
+    theme: 'pourcent', title: 'Formule de dépendance entre grandeurs',
     body: k.q,
     type: 'qcm', choices, correctIdx,
     solution: `On écrit la formule en introduisant la variable.`,
@@ -880,26 +880,7 @@ function t5_formule_dependance() {
   };
 }
 
-function t5_image_simple() {
-  const cases = [
-    { fx: 'x^2', x: 4, r: 16 },
-    { fx: '2x + 5', x: 3, r: 11 },
-    { fx: '3x - 1', x: 2, r: 5 },
-    { fx: 'x^2 - 3', x: 5, r: 22 }
-  ];
-  const k = pick(cases);
-  return {
-    theme: 'fonctions', title: 'Image d\'un nombre',
-    body: `Si \\(f(x) = ${k.fx}\\), que vaut \\(f(${k.x})\\) ?`,
-    type: 'input', expected: String(k.r),
-    solution: `On remplace \\(x\\) par \\(${k.x}\\) : \\(f(${k.x}) = ${k.r}\\).`,
-    help: {
-      cours: "L'image de \\(x\\) par \\(f\\) se note \\(f(x)\\). Pour la calculer : remplacer \\(x\\) par sa valeur.",
-      savoirFaire: "Bien respecter les priorités opératoires après substitution.",
-      erreurs: ["Oublier les parenthèses autour de la valeur.", "Erreur de calcul.", "Confondre f(x) et x."]
-    }
-  };
-}
+// SUPPRIMÉ : t5_image_simple (notation f(x) hors programme 4ème, relève de 3ème)
 
 
 /* ------------------------------------------------------------------
@@ -2474,6 +2455,426 @@ function t1p_doublement() {
 
 
 
+
+/* ==========================================================================
+   BLOC ENRICHISSEMENT — attendus 4ème stricts (PDF Eduscol)
+   Ajout équilibré dans les thèmes sous-représentés
+   ========================================================================== */
+
+/* --- ESPACE (+4) --- */
+
+function t7_aire_face_pave() {
+  const cases = [
+    { L: 8, l: 5, h: 3, face: 'de dessus', r: 40, sol: '\\(L \\times l = 8 \\times 5 = 40\\)' },
+    { L: 10, l: 4, h: 6, face: 'de devant', r: 60, sol: '\\(L \\times h = 10 \\times 6 = 60\\)' },
+    { L: 12, l: 7, h: 2, face: 'de côté', r: 14, sol: '\\(l \\times h = 7 \\times 2 = 14\\)' },
+    { L: 6, l: 6, h: 4, face: 'de dessus', r: 36, sol: '\\(6 \\times 6 = 36\\)' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'espace', title: 'Aire d\'une face d\'un pavé droit',
+    body: `Un pavé droit a pour dimensions L = ${k.L} cm, l = ${k.l} cm et h = ${k.h} cm. Quelle est l'aire de la face ${k.face} (en cm²) ?`,
+    type: 'input', expected: String(k.r), suffix: 'cm²',
+    solution: `L'aire de la face ${k.face} est ${k.sol} cm².`,
+    help: {
+      cours: "Chaque face d'un pavé droit est un rectangle. Aire d'un rectangle = L × l.",
+      savoirFaire: "Identifier les 2 dimensions de la face (pas les 3).",
+      erreurs: ["Utiliser les 3 dimensions.", "Confondre aire et volume.", "Oublier l'unité (cm²)."]
+    }
+  };
+}
+
+function t7_volume_pave() {
+  const cases = [
+    { L: 12, l: 6, h: 4, r: 288 }, { L: 5, l: 5, h: 5, r: 125 },
+    { L: 8, l: 3, h: 10, r: 240 }, { L: 15, l: 2, h: 6, r: 180 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'espace', title: 'Volume d\'un pavé droit',
+    body: `Calculer le volume d'un pavé droit de dimensions ${k.L} cm × ${k.l} cm × ${k.h} cm (en cm³).`,
+    type: 'input', expected: String(k.r), suffix: 'cm³',
+    solution: `\\(V = L \\times l \\times h = ${k.L} \\times ${k.l} \\times ${k.h} = ${k.r}\\) cm³.`,
+    help: {
+      cours: "Volume d'un pavé droit : \\(V = L \\times l \\times h\\).",
+      savoirFaire: "Multiplier les 3 dimensions dans le même unité.",
+      erreurs: ["N'utiliser que 2 dimensions (c'est une aire).", "Additionner au lieu de multiplier.", "Oublier cm³."]
+    }
+  };
+}
+
+function t7_patron() {
+  const cases = [
+    { q: "Le patron d'une pyramide à base carrée est composé de :", a: "1 carré et 4 triangles", opts: ["1 carré et 4 triangles", "1 carré et 4 rectangles", "4 triangles", "1 rectangle et 4 triangles"] },
+    { q: "Le patron d'un cône est composé de :", a: "un disque et un secteur de disque", opts: ["un disque et un secteur de disque", "2 disques et un rectangle", "2 triangles et un rectangle", "un cercle seul"] },
+    { q: "Le patron d'une pyramide à base triangulaire a :", a: "4 triangles", opts: ["4 triangles", "3 triangles + 1 carré", "1 triangle + 3 rectangles", "3 triangles"] }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: k.a, correct: true },
+    ...k.opts.filter(o => o !== k.a).map(o => ({ html: o, correct: false }))
+  ]);
+  return {
+    theme: 'espace', title: 'Reconnaître un patron',
+    body: k.q,
+    type: 'qcm', choices, correctIdx,
+    solution: `Réponse : <b>${k.a}</b>.`,
+    help: {
+      cours: "Un patron = dépliage 2D d'un solide 3D. On y voit la base + les faces latérales.",
+      savoirFaire: "Compter faces + identifier la base.",
+      erreurs: ["Oublier la base.", "Confondre pyramide et prisme.", "Confondre cône et cylindre."]
+    }
+  };
+}
+
+function t7_perspective_cavaliere() {
+  return {
+    theme: 'espace', title: 'Perspective cavalière',
+    body: "Dans une représentation d'un cube en perspective cavalière, combien d'arêtes sont représentées en pointillés (arêtes cachées) ?",
+    type: 'qcm',
+    choices: ["3", "6", "4", "12"],
+    correctIdx: 0,
+    solution: "Un cube a 12 arêtes. En perspective cavalière, 3 arêtes sont cachées (celles du coin arrière).",
+    help: {
+      cours: "Perspective cavalière : 3 arêtes cachées (pointillés), 9 visibles (traits pleins).",
+      savoirFaire: "Identifier le coin arrière du solide.",
+      erreurs: ["Compter toutes les arêtes.", "Confondre avec cylindre (1 arête cachée).", "Oublier que c'est 3D."]
+    }
+  };
+}
+
+/* --- TRANSFORMATIONS (+3) --- */
+
+function t8_translation_image() {
+  return {
+    theme: 'transformations', title: 'Image par une translation',
+    body: "Par la translation qui transforme A en B, l'image du point C est le point D tel que :",
+    type: 'qcm',
+    choices: [
+      "ABDC est un parallélogramme.",
+      "ABCD est un parallélogramme.",
+      "C est confondu avec D.",
+      "AC = BD."
+    ],
+    correctIdx: 0,
+    solution: "La translation qui transforme A en B transforme C en D si et seulement si ABDC est un parallélogramme.",
+    help: {
+      cours: "Translation : tous les points se déplacent de la même manière (même distance, même direction).",
+      savoirFaire: "Retenir : <b>ABDC parallélogramme</b> (attention à l'ordre).",
+      erreurs: ["Écrire ABCD au lieu de ABDC.", "Confondre translation et symétrie.", "Oublier que les côtés opposés sont égaux et parallèles."]
+    }
+  };
+}
+
+function t8_agrandissement_aire() {
+  const cases = [
+    { A0: 20, k: 3, r: 180 }, { A0: 15, k: 2, r: 60 },
+    { A0: 8, k: 5, r: 200 }, { A0: 25, k: 2, r: 100 }
+  ];
+  const c = pick(cases);
+  return {
+    theme: 'transformations', title: 'Agrandissement — aire',
+    body: `Une figure a une aire de ${c.A0} cm². Quelle est l'aire après un agrandissement de rapport ${c.k} (en cm²) ?`,
+    type: 'input', expected: String(c.r), suffix: 'cm²',
+    solution: `L'aire est multipliée par \\(k^2 = ${c.k}^2 = ${c.k*c.k}\\) : \\(${c.A0} \\times ${c.k*c.k} = ${c.r}\\) cm².`,
+    help: {
+      cours: "Agrandissement de rapport \\(k\\) : aires × \\(k^2\\).",
+      savoirFaire: "Élever le rapport au carré, puis multiplier.",
+      erreurs: ["Multiplier par k au lieu de k².", "Oublier le carré.", "Confondre avec longueur (×k)."]
+    }
+  };
+}
+
+function t8_agrandissement_volume() {
+  const cases = [
+    { V0: 6, k: 2, r: 48 }, { V0: 10, k: 3, r: 270 },
+    { V0: 4, k: 4, r: 256 }, { V0: 12, k: 2, r: 96 }
+  ];
+  const c = pick(cases);
+  return {
+    theme: 'transformations', title: 'Agrandissement — volume',
+    body: `Un solide a un volume de ${c.V0} cm³. Quel est son volume après un agrandissement de rapport ${c.k} (en cm³) ?`,
+    type: 'input', expected: String(c.r), suffix: 'cm³',
+    solution: `Le volume est multiplié par \\(k^3 = ${c.k}^3 = ${c.k*c.k*c.k}\\) : \\(${c.V0} \\times ${c.k*c.k*c.k} = ${c.r}\\) cm³.`,
+    help: {
+      cours: "Agrandissement de rapport \\(k\\) : volumes × \\(k^3\\).",
+      savoirFaire: "Élever le rapport au cube, puis multiplier.",
+      erreurs: ["Multiplier par k² au lieu de k³.", "Élever le volume lui-même au cube.", "Confondre les 3 règles (×k, ×k², ×k³)."]
+    }
+  };
+}
+
+/* --- PROPORTIONNALITÉ / POURCENTAGES (+3) --- */
+
+function t4_tableau_proportionnalite() {
+  const cases = [
+    { x1: 3, y1: 12, x2: 5, y2: 20 }, // coef 4
+    { x1: 2, y1: 7, x2: 6, y2: 21 },  // coef 3.5
+    { x1: 4, y1: 10, x2: 8, y2: 20 },  // coef 2.5
+    { x1: 5, y1: 15, x2: 7, y2: 21 }   // coef 3
+  ];
+  const k = pick(cases);
+  // Proportionnalité vraie
+  return {
+    theme: 'pourcent', title: 'Tableau de proportionnalité',
+    body: `Dans un tableau où ${k.x1} correspond à ${k.y1} et ${k.x2} correspond à ${k.y2}, vérifier s'il y a proportionnalité.`,
+    type: 'qcm',
+    choices: ['Oui, c\'est un tableau de proportionnalité.', 'Non, ce n\'est pas un tableau de proportionnalité.'],
+    correctIdx: (k.y1 / k.x1 === k.y2 / k.x2) ? 0 : 1,
+    solution: `Coefficient \\(\\dfrac{${k.y1}}{${k.x1}} = ${k.y1/k.x1}\\) et \\(\\dfrac{${k.y2}}{${k.x2}} = ${k.y2/k.x2}\\). ${k.y1/k.x1 === k.y2/k.x2 ? 'Coefficients égaux → proportionnalité.' : 'Coefficients différents → pas de proportionnalité.'}`,
+    help: {
+      cours: "Proportionnalité : le rapport y/x est constant (= coefficient de proportionnalité).",
+      savoirFaire: "Calculer y/x pour chaque couple, comparer.",
+      erreurs: ["Comparer x/y au lieu de y/x.", "Comparer les différences.", "Arrondir et se tromper."]
+    }
+  };
+}
+
+function t4_echelle() {
+  const cases = [
+    { reel: 300, carte: 3, echelle: '1/10 000' },
+    { reel: 5000, carte: 5, echelle: '1/100 000' },
+    { reel: 1500, carte: 3, echelle: '1/50 000' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'pourcent', title: 'Échelle d\'une carte',
+    body: `Une route mesure ${k.carte} cm sur une carte à l'échelle ${k.echelle}. Quelle est sa longueur réelle (en m) ?`,
+    type: 'input', expected: String(k.reel), suffix: 'm',
+    solution: `Échelle ${k.echelle} : 1 cm sur la carte = ${k.echelle.split('/')[1]} cm en réalité. Longueur réelle = ${k.carte} × ${k.echelle.split('/')[1]} cm = ${parseInt(k.echelle.split('/')[1].replace(/\s/g, '')) * k.carte} cm = ${k.reel} m.`,
+    help: {
+      cours: "Une échelle \\(\\dfrac{1}{n}\\) signifie : 1 unité sur le plan = \\(n\\) unités en réalité.",
+      savoirFaire: "Multiplier la longueur sur la carte par le dénominateur, puis convertir en m ou km.",
+      erreurs: ["Diviser au lieu de multiplier.", "Oublier la conversion cm → m.", "Inverser les rôles."]
+    }
+  };
+}
+
+function t4_loi_ohm() {
+  const cases = [
+    { U: 12, I: 2, R: 6, chercher: 'R' },
+    { U: 20, R: 5, I: 4, chercher: 'I' },
+    { R: 10, I: 3, U: 30, chercher: 'U' }
+  ];
+  const k = pick(cases);
+  let body, expected, solution;
+  if (k.chercher === 'R') {
+    body = `Loi d'Ohm : \\(U = R \\times I\\). Si \\(U = ${k.U}\\) V et \\(I = ${k.I}\\) A, quelle est la résistance R (en ohms) ?`;
+    expected = String(k.R);
+    solution = `\\(R = \\dfrac{U}{I} = \\dfrac{${k.U}}{${k.I}} = ${k.R}\\) Ω.`;
+  } else if (k.chercher === 'I') {
+    body = `Loi d'Ohm : \\(U = R \\times I\\). Si \\(U = ${k.U}\\) V et \\(R = ${k.R}\\) Ω, quelle est l'intensité I (en A) ?`;
+    expected = String(k.I);
+    solution = `\\(I = \\dfrac{U}{R} = \\dfrac{${k.U}}{${k.R}} = ${k.I}\\) A.`;
+  } else {
+    body = `Loi d'Ohm : \\(U = R \\times I\\). Si \\(R = ${k.R}\\) Ω et \\(I = ${k.I}\\) A, quelle est la tension U (en V) ?`;
+    expected = String(k.U);
+    solution = `\\(U = R \\times I = ${k.R} \\times ${k.I} = ${k.U}\\) V.`;
+  }
+  return {
+    theme: 'pourcent', title: 'Loi d\'Ohm (U = R × I)',
+    body, type: 'input', expected, solution,
+    help: {
+      cours: "<b>Loi d'Ohm</b> : \\(U = R \\times I\\). U en volts (V), R en ohms (Ω), I en ampères (A).",
+      savoirFaire: "Isoler la grandeur cherchée par calcul inverse : \\(R = U/I\\), \\(I = U/R\\).",
+      erreurs: ["Confondre U, R, I.", "Oublier l'unité.", "Mauvaise formule réciproque."]
+    }
+  };
+}
+
+/* --- MESURES (+2) --- */
+
+function t9_conv_vitesse() {
+  const cases = [
+    { v: 72, from: 'km/h', vR: 20, to: 'm/s', sol: '72 ÷ 3,6 = 20' },
+    { v: 54, from: 'km/h', vR: 15, to: 'm/s', sol: '54 ÷ 3,6 = 15' },
+    { v: 5, from: 'm/s', vR: 18, to: 'km/h', sol: '5 × 3,6 = 18' },
+    { v: 10, from: 'm/s', vR: 36, to: 'km/h', sol: '10 × 3,6 = 36' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'mesures', title: 'Conversion vitesse km/h ↔ m/s',
+    body: `Convertir ${k.v} ${k.from} en ${k.to}.`,
+    type: 'input', expected: String(k.vR), suffix: k.to,
+    solution: `${k.sol} ${k.to}.`,
+    help: {
+      cours: "<b>Règle</b> : 1 m/s = 3,6 km/h. Pour passer km/h → m/s : ÷3,6. Pour m/s → km/h : ×3,6.",
+      savoirFaire: "Mémoriser le facteur 3,6. Décider du sens avec le bon sens.",
+      erreurs: ["Inverser ×/÷.", "Oublier le facteur 3,6.", "Confondre unités."]
+    }
+  };
+}
+
+function t9_conv_debit() {
+  const cases = [
+    { v: 1, from: 'm³/s', vR: 60000, to: 'L/min', sol: '1 m³/s = 1000 L/s = 60 000 L/min' },
+    { v: 120, from: 'L/min', vR: 0.002, to: 'm³/s', sol: '120 L/min = 2 L/s = 0,002 m³/s' },
+    { v: 30, from: 'L/s', vR: 1800, to: 'L/min', sol: '30 × 60 = 1800' }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'mesures', title: 'Conversion de débits',
+    body: `Convertir ${k.v} ${k.from} en ${k.to}.`,
+    type: 'input', expected: [String(k.vR), String(k.vR).replace('.', ',')], suffix: k.to,
+    solution: `${k.sol} ${k.to}.`,
+    help: {
+      cours: "<b>Équivalences</b> : 1 m³ = 1000 L ; 1 min = 60 s ; 1 h = 60 min.",
+      savoirFaire: "Convertir d'abord le volume, puis le temps (ou inversement).",
+      erreurs: ["Convertir dans le mauvais sens.", "Oublier une étape.", "Confondre m³ et L."]
+    }
+  };
+}
+
+/* --- STATISTIQUES (+2) --- */
+
+function t10_mediane_pair() {
+  const cases = [
+    { serie: [12, 15, 18, 22, 25, 30], r: 20, exp: "(18 + 22) / 2 = 20" },
+    { serie: [5, 7, 9, 11], r: 8, exp: "(7 + 9) / 2 = 8" },
+    { serie: [10, 14, 16, 20, 22, 28], r: 18, exp: "(16 + 20) / 2 = 18" },
+    { serie: [3, 5, 7, 9, 11, 13, 15, 17], r: 10, exp: "(9 + 11) / 2 = 10" }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'stats', title: 'Médiane — effectif pair',
+    body: `Calculer la médiane de la série : ${k.serie.join(' ; ')}.`,
+    type: 'input', expected: String(k.r),
+    solution: `Effectif pair : médiane = moyenne des deux valeurs centrales. ${k.exp}.`,
+    help: {
+      cours: "<b>Médiane — effectif pair</b> : moyenne des 2 valeurs du milieu.",
+      savoirFaire: "Ordonner, repérer les 2 valeurs centrales, calculer leur moyenne.",
+      erreurs: ["Ne prendre qu'une seule valeur.", "Oublier d'ordonner.", "Erreur de division."]
+    }
+  };
+}
+
+function t10_diagramme_circulaire() {
+  const cases = [
+    { effectif: 5, total: 20, angle: 90 },  // 5/20 × 360 = 90
+    { effectif: 12, total: 48, angle: 90 },
+    { effectif: 3, total: 36, angle: 30 },
+    { effectif: 8, total: 24, angle: 120 }
+  ];
+  const k = pick(cases);
+  return {
+    theme: 'stats', title: 'Diagramme circulaire — angle',
+    body: `Dans une enquête sur ${k.total} personnes, ${k.effectif} aiment le chocolat. Quel angle (en °) doit-on tracer pour ce groupe sur un diagramme circulaire ?`,
+    type: 'input', expected: String(k.angle), suffix: '°',
+    solution: `Angle = \\(\\dfrac{\\text{effectif}}{\\text{total}} \\times 360° = \\dfrac{${k.effectif}}{${k.total}} \\times 360° = ${k.angle}°\\).`,
+    help: {
+      cours: "Dans un diagramme circulaire, l'angle est proportionnel à l'effectif. Le tour complet = 360°.",
+      savoirFaire: "Angle = (effectif / total) × 360°.",
+      erreurs: ["Multiplier par 100 (c'est pour un %).", "Oublier le 360°.", "Inverser effectif et total."]
+    }
+  };
+}
+
+/* --- PROBABILITÉS (+2) --- */
+
+function t11_evenement_type() {
+  const cases = [
+    { q: "Obtenir 7 en lançant un dé à 6 faces est un événement :", a: "impossible", opts: ["impossible", "certain", "probable", "aléatoire"] },
+    { q: "Tirer une boule du sac qui ne contient que des boules rouges est un événement :", a: "certain", opts: ["certain", "impossible", "probable", "aléatoire"] },
+    { q: "Sur un dé à 6 faces, obtenir un nombre entre 1 et 6 est un événement :", a: "certain", opts: ["certain", "impossible", "très rare", "aléatoire"] },
+    { q: "Obtenir Face en lançant une pièce équilibrée est un événement :", a: "équiprobable (avec Pile)", opts: ["équiprobable (avec Pile)", "impossible", "certain", "rare"] }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: k.a, correct: true },
+    ...k.opts.filter(o => o !== k.a).map(o => ({ html: o, correct: false }))
+  ]);
+  return {
+    theme: 'probas', title: 'Type d\'événement',
+    body: k.q,
+    type: 'qcm', choices, correctIdx,
+    solution: `Réponse : <b>${k.a}</b>.`,
+    help: {
+      cours: "<b>Événement certain</b> : probabilité 1. <b>Impossible</b> : probabilité 0. <b>Équiprobable</b> : même chance.",
+      savoirFaire: "Tester si l'événement peut / ne peut pas / doit se produire.",
+      erreurs: ["Confondre impossible et peu probable.", "Confondre certain et probable.", "Ignorer le contexte."]
+    }
+  };
+}
+
+function t11_proba_diverses_formes() {
+  const cases = [
+    { forme: '0,25', equiv: '1/4', equivPct: '25%' },
+    { forme: '0,8', equiv: '4/5', equivPct: '80%' },
+    { forme: '0,5', equiv: '1/2', equivPct: '50%' },
+    { forme: '3/4', equiv: '0,75', equivPct: '75%' }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: `\\(${k.equiv}\\)`, correct: true },
+    { html: `\\(${k.equivPct}\\)`, correct: false },
+    { html: `\\(${k.forme}\\)`, correct: false },
+    { html: `${(parseFloat(k.forme) * 2 || 0.1).toString().replace('.', ',')}`, correct: false }
+  ]);
+  return {
+    theme: 'probas', title: 'Exprimer une probabilité sous différentes formes',
+    body: `La probabilité d'un événement est \\(${k.forme}\\). Quelle autre forme lui correspond ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `\\(${k.forme} = ${k.equiv} = ${k.equivPct}\\).`,
+    help: {
+      cours: "Une probabilité s'exprime sous 3 formes équivalentes : décimale, fraction, pourcentage.",
+      savoirFaire: "Savoir passer de l'une à l'autre : fraction ÷ pour décimale, × 100 pour %.",
+      erreurs: ["Oublier la division.", "Confondre forme décimale et %.", "Erreur de conversion."]
+    }
+  };
+}
+
+/* --- ARITHMÉTIQUE (+1) --- */
+
+function t2_liste_premiers() {
+  const cases = [
+    { min: 10, max: 20, r: "11 ; 13 ; 17 ; 19" },
+    { min: 20, max: 30, r: "23 ; 29" },
+    { min: 50, max: 60, r: "53 ; 59" },
+    { min: 70, max: 80, r: "71 ; 73 ; 79" },
+    { min: 90, max: 100, r: "97" }
+  ];
+  const k = pick(cases);
+  const { choices, correctIdx } = makeQCM([
+    { html: k.r, correct: true },
+    ...cases.filter(c => c.r !== k.r).slice(0, 3).map(c => ({ html: c.r, correct: false }))
+  ]);
+  return {
+    theme: 'arithmetique', title: 'Liste des premiers entre deux nombres',
+    body: `Quels sont les nombres premiers compris entre ${k.min} et ${k.max} ?`,
+    type: 'qcm', choices, correctIdx,
+    solution: `Les premiers entre ${k.min} et ${k.max} sont : <b>${k.r}</b>.`,
+    help: {
+      cours: "Premiers < 100 : 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97.",
+      savoirFaire: "Tester la divisibilité par 2, 3, 5, 7.",
+      erreurs: ["Oublier 2 (seul premier pair).", "Inclure 1.", "Oublier certains."]
+    }
+  };
+}
+
+/* --- ALGO SCRATCH (+1) --- */
+
+function t12_interaction_lutins() {
+  return {
+    theme: 'algo', title: 'Interaction entre 2 lutins',
+    body: "Dans Scratch, pour faire dire une phrase à un lutin quand il en touche un autre, quel bloc utilise-t-on ?",
+    type: 'qcm',
+    choices: [
+      "si « touche le lutin X » alors dire ...",
+      "répéter 10 fois dire ...",
+      "attendre 1 seconde dire ...",
+      "ajouter 1 à compteur"
+    ],
+    correctIdx: 0,
+    solution: "On utilise une <b>instruction conditionnelle</b> avec le capteur « touche le lutin X ».",
+    help: {
+      cours: "Pour gérer l'interaction : condition \"si touche...\" + action (dire, bouger...).",
+      savoirFaire: "Placer le bloc dans une boucle « répéter indéfiniment » pour tester en continu.",
+      erreurs: ["Oublier de tester en continu.", "Mauvais capteur.", "Confondre touche et clic."]
+    }
+  };
+}
+
+
 const QUESTION_BANK = {
   calcul: [
     t1_relatifs_produit, t1_relatifs_quotient, t1_signe_produit,
@@ -2489,7 +2890,8 @@ const QUESTION_BANK = {
     t1p_factoriser_puissances, t1p_calcul_complexe, t1p_doublement
   ],
   arithmetique: [
-    t2_premier, t2_decomposition, t2_frac_egales, t2_simplifier, t2_probleme_divisibilite
+    t2_premier, t2_decomposition, t2_frac_egales, t2_simplifier, t2_probleme_divisibilite,
+    t2_liste_premiers
   ],
   algebre: [
     t3_developper_simple, t3_reduire, t3_factoriser_simple,
@@ -2505,33 +2907,38 @@ const QUESTION_BANK = {
     t3e_equation_complexe, t3e_probleme_perimetre
   ],
   pourcent: [
-    t4_pourcent_simple, t4_quatrieme_prop, t4_reconnaitre_proportionnalite, t4_vitesse_temps
-  ],
-  fonctions: [
-    t5_lecture_graphique, t5_formule_dependance, t5_image_simple
+    t4_pourcent_simple, t4_quatrieme_prop, t4_reconnaitre_proportionnalite, t4_vitesse_temps,
+    t5_lecture_graphique, t5_formule_dependance,
+    t4_tableau_proportionnalite, t4_echelle, t4_loi_ohm
   ],
   geometrie: [
     t6_pythagore_hyp, t6_pythagore_cote, t6_pythagore_reciproque,
     t6_cosinus, t6_thales_direct, t6_thales_reciproque, t6_cas_egalite
   ],
   transformations: [
-    t6_translation_conservation, t6_homothetie_rapport
+    t6_translation_conservation, t6_homothetie_rapport,
+    t8_translation_image, t8_agrandissement_aire, t8_agrandissement_volume
   ],
   espace: [
-    t7_volume_pyramide, t7_volume_cone, t7_repere_pave
+    t7_volume_pyramide, t7_volume_cone, t7_repere_pave,
+    t7_aire_face_pave, t7_volume_pave, t7_patron, t7_perspective_cavaliere
   ],
   mesures: [
-    t8_conv_vitesse, t8_conv_debit, t8_grandeur_composee
+    t8_conv_vitesse, t8_conv_debit, t8_grandeur_composee,
+    t9_conv_vitesse, t9_conv_debit
   ],
   stats: [
-    t9_mediane, t9_etendue, t9_frequence, t9_diagramme_circulaire
+    t9_mediane, t9_etendue, t9_frequence, t9_diagramme_circulaire,
+    t10_mediane_pair, t10_diagramme_circulaire
   ],
   probas: [
-    t10_vocabulaire_proba, t10_proba_contraire, t10_proba_simple
+    t10_vocabulaire_proba, t10_proba_contraire, t10_proba_simple,
+    t11_evenement_type, t11_proba_diverses_formes
   ],
   algo: [
     t11_scratch_boucle, t11_scratch_angle_polygone, t11_scratch_condition,
-    t11_scratch_variable, t11_scratch_evenement
+    t11_scratch_variable, t11_scratch_evenement,
+    t12_interaction_lutins
   ]
 };
 
@@ -2540,7 +2947,6 @@ const THEME_META = {
   arithmetique:    { label: 'Arithmétique (premiers, divisibilité)', short: 'Arithmétique', icon: '÷', color: '#a855f7' },
   algebre:         { label: 'Calcul littéral & équations', short: 'Algèbre', icon: 'x', color: '#0ea5e9' },
   pourcent:        { label: 'Proportionnalité & pourcentages', short: 'Proportions', icon: '%', color: '#f97316' },
-  fonctions:       { label: 'Fonctions (dépendance)', short: 'Fonctions', icon: 'ƒ', color: '#ec4899' },
   geometrie:       { label: 'Géométrie plane (Pythagore, Thalès, cos)', short: 'Géométrie', icon: '△', color: '#14b8a6' },
   transformations: { label: 'Transformations (translation, homothétie)', short: 'Transfos', icon: '↻', color: '#ef4444' },
   espace:          { label: 'Espace (pyramide, cône, repérage)', short: 'Espace', icon: '▣', color: '#8b5cf6' },
